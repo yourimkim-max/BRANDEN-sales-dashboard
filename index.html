@@ -112,10 +112,10 @@ input[type="date"] { width: 100%; padding: 8px 10px; }
 .ch h2 { font-family: var(--font-display); font-size: 28px; margin: 0; font-weight: 600; letter-spacing: -0.02em; }
 .ch .hint { font-size: 13px; color: var(--faint); }
 .ch .right { margin-left: auto; }
-.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0; background: var(--tile); color: var(--on-tile); border-radius: 18px; padding: 16px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0; background: var(--tile); color: var(--on-tile); border-radius: 18px; padding: 16px; }
 .kpi { background: transparent; border: 0; border-radius: 0; padding: 20px 22px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .kpi .l { font-size: 14px; color: var(--tile-muted); }
-.kpi .v { font-family: var(--font-display); white-space: nowrap; font-size: clamp(20px, 1.7vw, 30px); font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.025em; line-height: 1.15; }
+.kpi .v { font-family: var(--font-display); white-space: nowrap; font-size: clamp(20px, 1.7vw, 30px); overflow: hidden; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.025em; line-height: 1.15; }
 .kpi .f { font-size: 13px; color: var(--tile-muted); font-variant-numeric: tabular-nums; }
 .kpi .good { color: var(--tile-ok); } .kpi .bad { color: var(--tile-bad); }
 .good { color: var(--ok); } .bad { color: var(--bad); }
@@ -1313,6 +1313,15 @@ function render() {
   else if (S.view === 'promo') drawPromo();
   else if (S.view === 'room') drawRoom();
   else drawAds();
+  fitKpis();
+}
+// 금액이 길면 카드 폭에 맞게 글자 크기를 줄여요
+function fitKpis() {
+  document.querySelectorAll('.kpi .v').forEach((v) => {
+    if (!v.offsetParent) return;
+    v.style.fontSize = ''; let fs = parseFloat(getComputedStyle(v).fontSize);
+    while (v.scrollWidth > v.clientWidth + 1 && fs > 14) { fs -= 1; v.style.fontSize = fs + 'px'; }
+  });
 }
 
 /* ---------- 주소(#)에 조건 저장 ---------- */
