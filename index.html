@@ -398,8 +398,13 @@ td.name .s { margin-top: 2px; }
           <div class="scroll" id="adtype"></div>
         </div>
         <div class="card">
-          <div class="ch"><h2>캠페인별 실적</h2><span class="hint">열 제목 클릭 = 정렬</span><span class="right"><input type="search" id="adq" placeholder="캠페인 검색" aria-label="캠페인 검색"></span></div>
+          <div class="ch"><h2>캠페인별 실적</h2><span class="hint" id="adcamphint">열 제목 클릭 = 정렬</span><span class="right"><input type="search" id="adq" placeholder="캠페인 검색" aria-label="캠페인 검색"></span></div>
           <div class="scroll" id="adcamp"></div>
+        </div>
+        <div class="card" id="adgroup-card" hidden>
+          <div class="ch"><h2>광고그룹별 실적</h2><span class="hint">열 제목 클릭 = 정렬 · 상위 200개</span><span class="right"><input type="search" id="agq" placeholder="광고그룹 검색" aria-label="광고그룹 검색"></span></div>
+          <div id="agfilter" style="margin-bottom:14px" hidden></div>
+          <div class="scroll" id="adgroup"></div>
         </div>
       </div>
     </section>
@@ -417,7 +422,7 @@ const PROMOS = [
 const PALETTE = ['#0071e3', '#34c759', '#ff9f0a', '#5ac8fa', '#ff375f', '#ffcc00', '#af52de', '#00c7be', '#ff3b30', '#5856d6', '#a2845e', '#30b0c7', '#64d2ff', '#bf5af2'];
 
 /* ---------- 상태 ---------- */
-const S = { view: 'overview', grain: '주', metric: '순', from: null, to: null, preset: '28', cmp: 'prev', cfrom: null, cto: null, cats: new Set(), drill: null, product: null, q: '', psort: 'v', psdir: -1, csort: 'v', csdir: -1, hidden: new Set(), promo: 0, adch: '스스', asort: 'cost', asdir: -1, aq: '' };
+const S = { view: 'overview', grain: '주', metric: '순', from: null, to: null, preset: '28', cmp: 'prev', cfrom: null, cto: null, cats: new Set(), drill: null, product: null, q: '', psort: 'v', psdir: -1, csort: 'v', csdir: -1, hidden: new Set(), promo: 0, adch: '스스', asort: 'cost', asdir: -1, aq: '', gsort: 'cost', gsdir: -1, gq: '', agcp: null };
 let D = null; // { rows, products, cats, first, last }
 
 /* ---------- 유틸 ---------- */
@@ -493,7 +498,7 @@ function parse(text) {
   const ads = [];
   if (ai >= 0) rows.slice(1).forEach((r) => {
     const d = (r[ai] || '').trim(); if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
-    ads.push({ d, md: (r[ai + 1] || '').trim(), ch: (r[ai + 2] || '').trim(), t: (r[ai + 3] || '').trim(), cp: (r[ai + 4] || '').trim(), cost: num(r[ai + 5]), imp: num(r[ai + 6]), clk: num(r[ai + 7]), conv: num(r[ai + 8]), rev: num(r[ai + 9]) });
+    ads.push({ d, md: (r[ai + 1] || '').trim(), ch: (r[ai + 2] || '').trim(), t: (r[ai + 3] || '').trim(), cp: (r[ai + 4] || '').trim(), cost: num(r[ai + 5]), imp: num(r[ai + 6]), clk: num(r[ai + 7]), conv: num(r[ai + 8]), rev: num(r[ai + 9]), ag: (r[ai + 10] || '').trim().replace(/^-$/, '') });
   });
   ads.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : 0));
   return { rows: out, products, cats, first: out[0].d, last: out[out.length - 1].d, ads, adFirst: ads.length ? ads[0].d : '', adLast: ads.length ? ads[ads.length - 1].d : '' };
@@ -905,7 +910,7 @@ function adTable(host, rows, cols, sortable, onRow) {
   const tbl = el('table'), hr = tbl.createTHead().insertRow();
   cols.forEach((c) => {
     const th = el('th');
-    if (sortable) { const b = el('button', null, c.h + (S.asort === c.k ? (S.asdir < 0 ? ' ▼' : ' ▲') : '')); if (S.asort === c.k) b.setAttribute('aria-sort', S.asdir < 0 ? 'descending' : 'ascending'); b.onclick = () => { if (S.asort === c.k) S.asdir *= -1; else { S.asort = c.k; S.asdir = -1; } drawAds(); }; th.append(b); }
+    if (sortable) { const p = sortable === true ? 'a' : sortable, sk = p + 'sort', dk = p + 'sdir'; const b = el('button', null, c.h + (S[sk] === c.k ? (S[dk] < 0 ? ' ▼' : ' ▲') : '')); if (S[sk] === c.k) b.setAttribute('aria-sort', S[dk] < 0 ? 'descending' : 'ascending'); b.onclick = () => { if (S[sk] === c.k) S[dk] *= -1; else { S[sk] = c.k; S[dk] = -1; } drawAds(); }; th.append(b); }
     else th.textContent = c.h;
     hr.append(th);
   });
@@ -913,7 +918,7 @@ function adTable(host, rows, cols, sortable, onRow) {
   rows.forEach((r) => {
     const tr = tb.insertRow();
     if (r.total) tr.className = 'total';
-    else if (onRow) { tr.className = 'click'; tr.tabIndex = 0; tr.onclick = () => onRow(r); tr.onkeydown = (e) => { if (e.key === 'Enter') onRow(r); }; }
+    else if (onRow) { tr.className = 'click' + (r.sel ? ' sel' : ''); tr.tabIndex = 0; tr.onclick = () => onRow(r); tr.onkeydown = (e) => { if (e.key === 'Enter') onRow(r); }; }
     cols.forEach((c) => c.f(tr.insertCell(), r));
   });
   host.append(tbl);
@@ -921,7 +926,7 @@ function adTable(host, rows, cols, sortable, onRow) {
 function drawAds() {
   const media = { 'ads-sa': '검색광고', 'ads-gfa': 'GFA', 'ads-meta': 'Meta' }[S.view] || null;
   const st = $('adstatus'), note = $('adnote');
-  ['adkpis', 'adbars', 'adlegend', 'admedia', 'adtype', 'adcamp'].forEach((id) => $(id).replaceChildren());
+  ['adkpis', 'adbars', 'adlegend', 'admedia', 'adtype', 'adcamp', 'adgroup', 'agfilter'].forEach((id) => $(id).replaceChildren());
   if (!D.ads.length) { st.hidden = false; st.textContent = "광고 데이터를 불러오지 못했어요. '네이버 매출(임시)' 시트 '대시보드_집계' 탭에서 광고 시트 연결(액세스 허용)을 확인해 주세요."; return; }
   st.hidden = true;
   note.textContent = '스마트스토어 광고만 집계해요. 광고비·전환매출은 각 매체 리포트 기준이에요(검색광고 비용은 VAT 포함, GFA·Meta 전환은 구매 기준). 매체가 집계한 전환이라 실제 스토어 매출과 다를 수 있어요. 광고 데이터 ' + D.adFirst + ' ~ ' + D.adLast;
@@ -1002,11 +1007,28 @@ function drawAds() {
   const cc = adAgg(rg, (r) => r.md + '|' + r.cp, pred), cpv = adAgg(cg, (r) => r.md + '|' + r.cp, pred), meta = new Map();
   for (const r of D.ads) meta.set(r.md + '|' + r.cp, r);
   const q = S.aq.trim().toLowerCase();
-  let crows = Array.from(cc, ([kk, v]) => { const r0 = meta.get(kk) || {}; return adRow(r0.cp || kk, v, cpv.get(kk), { sub: [media ? '' : r0.md, r0.t].filter(Boolean).join(' · '), color: MCOLOR[r0.md] }); });
+  const isSA = media === '검색광고';
+  let crows = Array.from(cc, ([kk, v]) => { const r0 = meta.get(kk) || {}; return adRow(r0.cp || kk, v, cpv.get(kk), { sub: [media ? '' : r0.md, r0.t].filter(Boolean).join(' · '), color: MCOLOR[r0.md], sel: isSA && S.agcp === r0.cp }); });
   if (q) crows = crows.filter((r) => (r.name + ' ' + r.sub).toLowerCase().includes(q));
   const sk = S.asort, sd = S.asdir;
   crows.sort((p, q2) => (sk === 'name' ? p.name.localeCompare(q2.name, 'ko') * -sd : ((p[sk] ?? -Infinity) - (q2[sk] ?? -Infinity)) * sd));
-  adTable($('adcamp'), crows.slice(0, 150), [Object.assign({}, AC.name, { h: '캠페인' }), AC.cost, AC.imp, AC.clk, AC.ctr, AC.cpc, AC.conv, AC.rev, AC.roas, AC.dcost, AC.droas], true);
+  const ccols = [Object.assign({}, AC.name, { h: '캠페인' }), AC.cost, AC.imp, AC.clk, AC.ctr, AC.cpc, AC.conv, AC.rev, AC.roas, AC.dcost, AC.droas];
+  $('adcamphint').textContent = isSA ? '열 제목 클릭 = 정렬 · 행 클릭 = 그 캠페인의 광고그룹 보기' : '열 제목 클릭 = 정렬';
+  adTable($('adcamp'), crows.slice(0, 150), ccols, true, isSA ? (r) => { S.agcp = S.agcp === r.name ? null : r.name; drawAds(); if (S.agcp) $('adgroup-card').scrollIntoView({ behavior: 'smooth', block: 'start' }); } : null);
+  // 광고그룹별 (검색광고)
+  $('adgroup-card').hidden = !isSA;
+  if (!isSA) return;
+  const gpred = (r) => pred(r) && r.ag && (!S.agcp || r.cp === S.agcp);
+  const gc = adAgg(rg, (r) => r.cp + '|' + r.ag, gpred), gp = adAgg(cg, (r) => r.cp + '|' + r.ag, gpred), gmeta = new Map();
+  for (const r of D.ads) if (r.ag) gmeta.set(r.cp + '|' + r.ag, r);
+  const gq = S.gq.trim().toLowerCase();
+  let grows = Array.from(gc, ([kk, v]) => { const r0 = gmeta.get(kk) || {}; return adRow(r0.ag || kk, v, gp.get(kk), { sub: [r0.t, S.agcp ? '' : r0.cp].filter(Boolean).join(' · '), color: MCOLOR[media] }); });
+  if (gq) grows = grows.filter((r) => (r.name + ' ' + r.sub).toLowerCase().includes(gq));
+  const gk = S.gsort, gd = S.gsdir;
+  grows.sort((p, q2) => (gk === 'name' ? p.name.localeCompare(q2.name, 'ko') * -gd : ((p[gk] ?? -Infinity) - (q2[gk] ?? -Infinity)) * gd));
+  const af = $('agfilter'); af.hidden = !S.agcp;
+  if (S.agcp) { const d = el('div', 'drill'); d.append(document.createTextNode('캠페인: ' + S.agcp)); const x = el('button', null, '해제'); x.type = 'button'; x.onclick = () => { S.agcp = null; drawAds(); }; d.append(x); af.append(d); }
+  adTable($('adgroup'), grows.slice(0, 200), [Object.assign({}, AC.name, { h: '광고그룹' })].concat(ccols.slice(1)), 'g');
 }
 
 /* ---------- 조건 패널 ---------- */
@@ -1101,6 +1123,7 @@ const dateOk = (e) => e.value && e.validity.valid;
   syncHash(); render();
 }));
 let aqt; $('adq').addEventListener('input', (e) => { clearTimeout(aqt); aqt = setTimeout(() => { S.aq = e.target.value; drawAds(); }, 150); });
+let gqt; $('agq').addEventListener('input', (e) => { clearTimeout(gqt); gqt = setTimeout(() => { S.gq = e.target.value; drawAds(); }, 150); });
 document.querySelectorAll('.nav a').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); S.view = a.dataset.view; S.drill = null; syncHash(); render(); window.scrollTo(0, 0); }));
 let qt; $('q').addEventListener('input', (e) => { clearTimeout(qt); qt = setTimeout(() => { S.q = e.target.value; drawProduct(); }, 150); });
 $('pclose').addEventListener('click', () => { S.product = null; syncHash(); drawProduct(); });
