@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script>try { document.documentElement.dataset.theme = localStorage.getItem('bd-theme') || 'dark'; } catch (e) { document.documentElement.dataset.theme = 'dark'; }</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <style>
 /* DESIGN.md (getdesign: apple) 기반 — 단일 액센트 블루, 파치먼트 캔버스, 헤어라인 카드, 필 버튼 */
@@ -20,13 +21,14 @@
   --frost: rgba(245, 245, 247, .8);
   --tip: rgba(255, 255, 255, .92); --shadow: 0 0 0 1px rgba(0, 0, 0, .06);
   --context: #d2d2d7;
+  --seg-on: #ffffff; --seg-track: rgba(118, 118, 128, .12);
   --tile: #272729; --on-tile: #ffffff; --tile-muted: #a1a1a6; --tile-ok: #30d158; --tile-bad: #ff6961;
   --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --font-display: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #000000; --panel: #1d1d1f; --side: #000000; --side-fg: #a1a1a6; --side-hi: #f5f5f7;
     --fg: #f5f5f7; --muted: #a1a1a6; --faint: #86868b; --line: rgba(255, 255, 255, .1); --line2: #2a2a2c;
     --accent: #2997ff; --focus: #2997ff; --accent-weak: rgba(41, 151, 255, .14); --accent-fg: #000000;
@@ -35,8 +37,21 @@
     --frost: rgba(22, 22, 23, .8);
     --tip: rgba(29, 29, 31, .94); --shadow: 0 0 0 1px rgba(255, 255, 255, .08);
     --context: #424245;
+    --seg-on: #636366; --seg-track: rgba(118, 118, 128, .24);
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+    --bg: #000000; --panel: #1d1d1f; --side: #000000; --side-fg: #a1a1a6; --side-hi: #f5f5f7;
+    --fg: #f5f5f7; --muted: #a1a1a6; --faint: #86868b; --line: rgba(255, 255, 255, .1); --line2: #2a2a2c;
+    --accent: #2997ff; --focus: #2997ff; --accent-weak: rgba(41, 151, 255, .14); --accent-fg: #000000;
+    --ok: #30d158; --bad: #ff453a; --band: rgba(41, 151, 255, .10); --band2: rgba(255, 255, 255, .05);
+    --banner: #1d1d1f; --banner-line: rgba(255, 255, 255, .1);
+    --frost: rgba(22, 22, 23, .8);
+    --tip: rgba(29, 29, 31, .94); --shadow: 0 0 0 1px rgba(255, 255, 255, .08);
+    --context: #424245;
+    --seg-on: #636366; --seg-track: rgba(118, 118, 128, .24);
+    color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -54,6 +69,13 @@ button:active { transform: scale(.95); }
 .nav a:hover { color: var(--side-hi); }
 .nav a[aria-current="page"] { background: rgba(255, 255, 255, .12); color: var(--side-hi); font-weight: 600; }
 .nav svg { width: 15px; height: 15px; flex: none; }
+.side { border-right: 1px solid rgba(255, 255, 255, .08); }
+.themebtn { display: flex; align-items: center; gap: 10px; margin: 18px 10px 0; padding: 0; border: 0; background: none; color: var(--side-fg); font-size: 13px; cursor: pointer; }
+.themebtn .sw { width: 34px; height: 20px; border-radius: 9999px; background: #39393d; position: relative; flex: none; transition: background .2s; }
+.themebtn .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #ffffff; transition: transform .2s; }
+.themebtn[aria-pressed="true"] .sw { background: var(--accent); }
+.themebtn[aria-pressed="true"] .sw::after { transform: translateX(14px); }
+.themebtn:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
 /* 조회 조건: 프로스트 패널 */
 .filters { background: var(--frost); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-right: 1px solid var(--line); padding: 32px 22px 56px; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; }
 .fh { font-family: var(--font-display); font-size: 24px; color: var(--fg); font-weight: 600; letter-spacing: -0.02em; }
@@ -67,9 +89,9 @@ button:active { transform: scale(.95); }
 .chip:hover { border-color: var(--faint); }
 .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 600; }
 .chip:focus-visible, .nav a:focus-visible, select:focus-visible, input:focus-visible, th button:focus-visible, .seg button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.seg { display: inline-flex; background: rgba(118, 118, 128, .12); border-radius: 9999px; padding: 2px; gap: 2px; }
+.seg { display: inline-flex; background: var(--seg-track); border-radius: 9999px; padding: 2px; gap: 2px; }
 .seg button { border: 0; background: transparent; padding: 7px 16px; font-size: 14px; cursor: pointer; color: var(--fg); border-radius: 9999px; transition: transform .1s; }
-.seg button[aria-pressed="true"] { background: var(--panel); color: var(--fg); font-weight: 600; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .04), 0 3px 8px rgba(0, 0, 0, .12); }
+.seg button[aria-pressed="true"] { background: var(--seg-on); color: var(--fg); font-weight: 600; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .04), 0 3px 8px rgba(0, 0, 0, .12); }
 select, input[type="date"], input[type="search"] { border: 1px solid var(--line); background: var(--panel); border-radius: 9999px; padding: 8px 14px; font-size: 14px; min-width: 0; }
 input[type="date"] { width: 100%; padding: 8px 10px; }
 .dates { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; align-items: center; }
@@ -143,7 +165,8 @@ td.name .s { margin-top: 2px; }
 .fbody { display: flex; flex-direction: column; gap: 22px; }
 @media (max-width: 1100px) {
   .app { grid-template-columns: 64px 268px minmax(0, 1fr); }
-  .brand span, .nav a span, .navh { display: none; }
+  .brand span, .nav a span, .navh, .themebtn .tl { display: none; }
+  .themebtn { margin: 18px auto 0; }
   .nav a { justify-content: center; }
   .main { padding: 40px 32px 80px; }
   .top h1 { font-size: 40px; }
@@ -152,6 +175,7 @@ td.name .s { margin-top: 2px; }
   .app { display: block; }
   .side { position: sticky; top: 0; height: 44px; z-index: 10; display: flex; align-items: center; gap: 6px; padding: 0 max(12px, env(safe-area-inset-left, 0px)); overflow-x: auto; }
   .brand { padding: 0 8px 0 0; font-size: 15px; } .brand span { display: inline; }
+  .themebtn { margin: 0 0 0 auto; padding-left: 8px; } .themebtn .tl { display: none; }
   .nav { display: flex; gap: 2px; } .nav a { padding: 6px 10px; white-space: nowrap; font-size: 12.5px; } .nav a span { display: inline; } .nav svg { display: none; }
   .filters { position: sticky; top: 44px; z-index: 9; height: auto; max-height: calc(100vh - 44px); border-right: 0; border-bottom: 1px solid var(--line); padding: 12px max(16px, env(safe-area-inset-left, 0px)); }
   .filters .fbody[hidden] { display: none !important; }
@@ -183,6 +207,7 @@ td.name .s { margin-top: 2px; }
       <a href="#product" data-view="product"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><span>상품 조회</span></a>
       <a href="#promo" data-view="promo"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg><span>프로모션</span></a>
     </div>
+    <button type="button" class="themebtn" id="themebtn" aria-pressed="true"><span class="sw"></span><span class="tl">다크 모드</span></button>
   </nav>
 
   <aside class="filters" aria-label="조회 조건">
@@ -859,6 +884,9 @@ $('pclose').addEventListener('click', () => { S.product = null; syncHash(); draw
 $('promosel').addEventListener('change', (e) => { S.promo = +e.target.value; drawPromo(); });
 $('promoapply').addEventListener('click', () => { const p = PROMOS[S.promo]; if (!p) return; S.from = p.시작; S.to = p.종료 > D.last ? D.last : p.종료; S.preset = ''; S.grain = '일'; S.cmp = 'prev'; S.drill = null; S.view = 'overview'; syncHash(); render(); window.scrollTo(0, 0); });
 $('mtoggle').addEventListener('click', () => { const fb = $('fbody'); fb.hidden = !fb.hidden; $('mtoggle').setAttribute('aria-expanded', String(!fb.hidden)); });
+function syncTheme() { const dark = document.documentElement.dataset.theme !== 'light'; $('themebtn').setAttribute('aria-pressed', String(dark)); $('themebtn').setAttribute('aria-label', '다크 모드 ' + (dark ? '켜짐' : '꺼짐')); }
+$('themebtn').addEventListener('click', () => { const t = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'; document.documentElement.dataset.theme = t; try { localStorage.setItem('bd-theme', t); } catch (e) {} syncTheme(); render(); });
+syncTheme();
 window.addEventListener('hashchange', () => { if (D) { readHash(); render(); } });
 let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 150); });
 
