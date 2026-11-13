@@ -998,9 +998,9 @@ function drawAds() {
   // 유형별
   $('adtype-title').textContent = media ? (media === '검색광고' ? '캠페인 유형별 실적' : media === 'GFA' ? '캠페인 목적별 실적' : '타겟별 실적') : '매체·유형별 실적';
   const tc = adAgg(rg, (r) => r.md + '|' + (r.t || '기타'), pred), tp = adAgg(cg, (r) => r.md + '|' + (r.t || '기타'), pred);
-  const trows = Array.from(tc, ([kk, v]) => { const [md, ty] = kk.split('|'); return adRow(ty, v, tp.get(kk), { sub: media ? '' : md, color: MCOLOR[md], share: a.cost ? v.cost / a.cost * 100 : null }); });
-  const tsum = new Map(); trows.forEach((r) => tsum.set(r.name, (tsum.get(r.name) || 0) + r.cost));
-  trows.sort((p, q) => (p.name === q.name ? q.cost - p.cost : (tsum.get(q.name) - tsum.get(p.name)) || p.name.localeCompare(q.name, 'ko')));
+  const trows = Array.from(tc, ([kk, v]) => { const [md, ty] = kk.split('|'); return adRow(ty, v, tp.get(kk), { sub: media ? '' : md, md, color: MCOLOR[md], share: a.cost ? v.cost / a.cost * 100 : null }); });
+  trows.forEach((r) => { r.mi = MEDIA.indexOf(r.md); });
+  trows.sort((p, q) => (p.mi - q.mi) || (q.cost - p.cost));
   adTable($('adtype'), trows, [Object.assign({}, AC.name, { h: '유형' }), AC.cost, AC.share, AC.clk, AC.ctr, AC.cpc, AC.conv, AC.rev, AC.roas, AC.droas], false);
   // 캠페인별
   const cc = adAgg(rg, (r) => r.md + '|' + r.cp, pred), cpv = adAgg(cg, (r) => r.md + '|' + r.cp, pred), meta = new Map();
