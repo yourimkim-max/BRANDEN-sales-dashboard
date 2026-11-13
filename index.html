@@ -160,6 +160,10 @@ td.name .s { margin-top: 2px; }
 .search { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .search input { flex: 1; min-width: 200px; height: 44px; padding: 0 20px; font-size: 17px; }
 .view[hidden] { display: none !important; }
+.agwrap { display: flex; flex-direction: column; gap: 16px; }
+.aghead { margin: 16px 0 0; }
+.aghead h2 { font-size: 34px; }
+.agcard { scroll-margin-top: 80px; }
 .loading .main > *:not(.top):not(.status) { opacity: .4; }
 .mtoggle { display: none; }
 .fbody { display: flex; flex-direction: column; gap: 22px; }
@@ -401,10 +405,9 @@ td.name .s { margin-top: 2px; }
           <div class="ch"><h2>캠페인별 실적</h2><span class="hint" id="adcamphint">열 제목 클릭 = 정렬</span><span class="right"><input type="search" id="adq" placeholder="캠페인 검색" aria-label="캠페인 검색"></span></div>
           <div class="scroll" id="adcamp"></div>
         </div>
-        <div class="card" id="adgroup-card" hidden>
-          <div class="ch"><h2>광고그룹별 실적</h2><span class="hint">열 제목 클릭 = 정렬 · 상위 200개</span><span class="right"><input type="search" id="agq" placeholder="광고그룹 검색" aria-label="광고그룹 검색"></span></div>
-          <div id="agfilter" style="margin-bottom:14px" hidden></div>
-          <div class="scroll" id="adgroup"></div>
+        <div id="adgroup-card" class="agwrap" hidden>
+          <div class="ch aghead"><h2>광고그룹별 실적</h2><span class="hint">쇼핑검색 · 파워링크 · 브랜드형으로 나눠 보여줘요 · 열 제목 클릭 = 정렬</span><span class="right"><input type="search" id="agq" placeholder="광고그룹 검색" aria-label="광고그룹 검색"></span></div>
+          <div class="agwrap" id="adgroups"></div>
         </div>
       </div>
     </section>
@@ -926,7 +929,7 @@ function adTable(host, rows, cols, sortable, onRow) {
 function drawAds() {
   const media = { 'ads-sa': '검색광고', 'ads-gfa': 'GFA', 'ads-meta': 'Meta' }[S.view] || null;
   const st = $('adstatus'), note = $('adnote');
-  ['adkpis', 'adbars', 'adlegend', 'admedia', 'adtype', 'adcamp', 'adgroup', 'agfilter'].forEach((id) => $(id).replaceChildren());
+  ['adkpis', 'adbars', 'adlegend', 'admedia', 'adtype', 'adcamp', 'adgroups'].forEach((id) => $(id).replaceChildren());
   if (!D.ads.length) { st.hidden = false; st.textContent = "광고 데이터를 불러오지 못했어요. '네이버 매출(임시)' 시트 '대시보드_집계' 탭에서 광고 시트 연결(액세스 허용)을 확인해 주세요."; return; }
   st.hidden = true;
   note.textContent = '스마트스토어 광고만 집계해요. 광고비·전환매출은 각 매체 리포트 기준이에요(검색광고 비용은 VAT 포함, GFA·Meta 전환은 구매 기준). 매체가 집계한 전환이라 실제 스토어 매출과 다를 수 있어요. 광고 데이터 ' + D.adFirst + ' ~ ' + D.adLast;
@@ -1008,27 +1011,43 @@ function drawAds() {
   for (const r of D.ads) meta.set(r.md + '|' + r.cp, r);
   const q = S.aq.trim().toLowerCase();
   const isSA = media === '검색광고';
-  let crows = Array.from(cc, ([kk, v]) => { const r0 = meta.get(kk) || {}; return adRow(r0.cp || kk, v, cpv.get(kk), { sub: [media ? '' : r0.md, r0.t].filter(Boolean).join(' · '), color: MCOLOR[r0.md], sel: isSA && S.agcp === r0.cp }); });
+  let crows = Array.from(cc, ([kk, v]) => { const r0 = meta.get(kk) || {}; return adRow(r0.cp || kk, v, cpv.get(kk), { sub: [media ? '' : r0.md, r0.t].filter(Boolean).join(' · '), color: MCOLOR[r0.md], cp: r0.cp, t: r0.t }); });
   if (q) crows = crows.filter((r) => (r.name + ' ' + r.sub).toLowerCase().includes(q));
   const sk = S.asort, sd = S.asdir;
   crows.sort((p, q2) => (sk === 'name' ? p.name.localeCompare(q2.name, 'ko') * -sd : ((p[sk] ?? -Infinity) - (q2[sk] ?? -Infinity)) * sd));
   const ccols = [Object.assign({}, AC.name, { h: '캠페인' }), AC.cost, AC.imp, AC.clk, AC.ctr, AC.cpc, AC.conv, AC.rev, AC.roas, AC.dcost, AC.droas];
-  $('adcamphint').textContent = isSA ? '열 제목 클릭 = 정렬 · 행 클릭 = 그 캠페인의 광고그룹 보기' : '열 제목 클릭 = 정렬';
-  adTable($('adcamp'), crows.slice(0, 150), ccols, true, isSA ? (r) => { S.agcp = S.agcp === r.name ? null : r.name; drawAds(); if (S.agcp) $('adgroup-card').scrollIntoView({ behavior: 'smooth', block: 'start' }); } : null);
-  // 광고그룹별 (검색광고)
+  $('adcamphint').textContent = isSA ? '열 제목 클릭 = 정렬 · 행 클릭 = 그 유형의 광고그룹으로 이동' : '열 제목 클릭 = 정렬';
+  const SCLS = ['쇼핑검색', '파워링크', '브랜드형'];
+  const scls = (r) => (/브랜드형/.test(r.cp || '') ? '브랜드형' : r.t || '기타');
+  adTable($('adcamp'), crows.slice(0, 150), ccols, true, isSA ? (r) => { const c = document.getElementById('ag-' + scls(r)); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } : null);
+  // 광고그룹별 (검색광고) — 쇼핑검색 / 파워링크 / 브랜드형
   $('adgroup-card').hidden = !isSA;
   if (!isSA) return;
-  const gpred = (r) => pred(r) && r.ag && (!S.agcp || r.cp === S.agcp);
-  const gc = adAgg(rg, (r) => r.cp + '|' + r.ag, gpred), gp = adAgg(cg, (r) => r.cp + '|' + r.ag, gpred), gmeta = new Map();
-  for (const r of D.ads) if (r.ag) gmeta.set(r.cp + '|' + r.ag, r);
-  const gq = S.gq.trim().toLowerCase();
-  let grows = Array.from(gc, ([kk, v]) => { const r0 = gmeta.get(kk) || {}; return adRow(r0.ag || kk, v, gp.get(kk), { sub: [r0.t, S.agcp ? '' : r0.cp].filter(Boolean).join(' · '), color: MCOLOR[media] }); });
-  if (gq) grows = grows.filter((r) => (r.name + ' ' + r.sub).toLowerCase().includes(gq));
-  const gk = S.gsort, gd = S.gsdir;
-  grows.sort((p, q2) => (gk === 'name' ? p.name.localeCompare(q2.name, 'ko') * -gd : ((p[gk] ?? -Infinity) - (q2[gk] ?? -Infinity)) * gd));
-  const af = $('agfilter'); af.hidden = !S.agcp;
-  if (S.agcp) { const d = el('div', 'drill'); d.append(document.createTextNode('캠페인: ' + S.agcp)); const x = el('button', null, '해제'); x.type = 'button'; x.onclick = () => { S.agcp = null; drawAds(); }; d.append(x); af.append(d); }
-  adTable($('adgroup'), grows.slice(0, 200), [Object.assign({}, AC.name, { h: '광고그룹' })].concat(ccols.slice(1)), 'g');
+  const SEP = '\u0001', gpred = (r) => pred(r) && r.ag, gkey = (r) => scls(r) + SEP + r.cp + SEP + r.ag;
+  const gc = adAgg(rg, gkey, gpred), gp = adAgg(cg, gkey, gpred);
+  const gq = S.gq.trim().toLowerCase(), gk = S.gsort, gd = S.gsdir, by = new Map();
+  const addT = (t, v) => { t.cost += v.cost; t.imp += v.imp; t.clk += v.clk; t.conv += v.conv; t.rev += v.rev; };
+  for (const [kk, v] of gc) {
+    const [c, cp, ag] = kk.split(SEP); let g = by.get(c);
+    if (!g) { g = { items: [], cps: new Set(), tot: AD0(), prev: AD0() }; by.set(c, g); }
+    g.items.push({ cp, ag, v, p: gp.get(kk) }); g.cps.add(cp); addT(g.tot, v);
+  }
+  for (const [kk, v] of gp) { const g = by.get(kk.split(SEP)[0]); if (g) addT(g.prev, v); }
+  const order = SCLS.filter((c) => by.has(c)).concat(Array.from(by.keys()).filter((c) => !SCLS.includes(c)).sort());
+  const ghost = $('adgroups');
+  if (!order.length) { ghost.append(el('div', 'empty', '이 기간에는 광고그룹 데이터가 없어요')); return; }
+  const gcols = [Object.assign({}, AC.name, { h: '광고그룹' })].concat(ccols.slice(1));
+  order.forEach((c) => {
+    const g = by.get(c), multi = g.cps.size > 1;
+    let rows = g.items.map((it) => adRow(it.ag, it.v, it.p, { sub: multi ? it.cp : '', color: MCOLOR[media] }));
+    if (gq) rows = rows.filter((r) => (r.name + ' ' + r.sub).toLowerCase().includes(gq));
+    rows.sort((p, q2) => (gk === 'name' ? p.name.localeCompare(q2.name, 'ko') * -gd : ((p[gk] ?? -Infinity) - (q2[gk] ?? -Infinity)) * gd));
+    const card = el('div', 'card agcard'); card.id = 'ag-' + c;
+    const ch = el('div', 'ch'); ch.append(el('h2', null, c), el('span', 'hint', '광고그룹 ' + g.items.length + '개 · 광고비 ' + won(g.tot.cost) + ' · ROAS ' + pctf(roasOf(g.tot), 0)));
+    const sc = el('div', 'scroll'); card.append(ch, sc); ghost.append(card);
+    if (!rows.length) { sc.append(el('div', 'empty', '검색 결과가 없어요')); return; }
+    adTable(sc, [adRow('합계', g.tot, cg ? g.prev : null, { total: true })].concat(rows.slice(0, 200)), gcols, 'g');
+  });
 }
 
 /* ---------- 조건 패널 ---------- */
