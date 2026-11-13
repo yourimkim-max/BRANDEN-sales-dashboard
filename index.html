@@ -297,6 +297,21 @@ td.name .s { margin-top: 2px; }
 @media (max-width: 1100px) { .mr-body { grid-template-columns: minmax(0, 1fr); } .mr-side { display: grid; grid-template-columns: 160px minmax(0, 1fr); align-items: start; } .mr-side > :not(.mr-ava) { grid-column: 2; } .mr-ava { grid-row: 1 / span 4; } }
 @media (max-width: 700px) { .room.wide { grid-column: auto; } .mr-side { display: flex; align-items: stretch; } .mr { padding: 10px; } .mr-top { flex-wrap: wrap; } .mr-rooms { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .arm, .ln, .emo, .steam { animation: none !important; } }
+/* 다크 모드 버튼: 화면 오른쪽 위 */
+@media (min-width: 821px) {
+  .themebtn { position: fixed; top: 12px; right: 20px; z-index: 30; margin: 0; height: 36px; padding: 0 14px 0 8px; border: 1px solid var(--line); border-radius: 9999px; background: var(--panel); color: var(--fg); font-weight: 600; }
+  .themebtn .tl { display: inline; }
+  .toolbar { padding-right: 170px; }
+  .side { z-index: 31; }
+}
+@media (min-width: 821px) and (max-width: 1100px) {
+  .themebtn { padding: 0 8px; } .themebtn .tl, .tcmp { display: none; }
+  .toolbar { padding-right: 84px; }
+}
+@media (max-width: 820px) {
+  .themebtn { position: fixed; top: 0; right: 0; z-index: 40; margin: 0; height: 44px; padding: 0 12px 0 26px; background: linear-gradient(90deg, transparent, var(--side) 16px); }
+  .side { padding-right: 60px; }
+}
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } button:active { transform: none; } }
 </style>
 </head>
