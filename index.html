@@ -4,6 +4,880 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
+<title>브랜든 매출 조회</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --side: #fbfbfc; --fg: #1b1f24; --muted: #6a717b; --faint: #9aa1aa; --line: #e4e7eb; --line2: #eef0f3;
+  --accent: #4f46e5; --accent-weak: #eef0ff; --accent-fg: #ffffff;
+  --ok: #17803d; --bad: #c2362b; --band: rgba(79, 70, 229, .07); --band2: rgba(106, 113, 123, .08);
+  --banner: #f3f5ff; --banner-line: #dfe3ff;
+  --tip: #ffffff; --shadow: 0 8px 28px rgba(16, 20, 28, .12);
+  --font: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111317; --panel: #191c21; --side: #15181c; --fg: #e9ecf0; --muted: #a0a7b1; --faint: #6f7680; --line: #2a2f36; --line2: #22262c;
+    --accent: #8b85ff; --accent-weak: #262447; --accent-fg: #0f1014;
+    --ok: #4cc27c; --bad: #ff7b6f; --band: rgba(139, 133, 255, .10); --band2: rgba(160, 167, 177, .10);
+    --banner: #1c1f33; --banner-line: #2d3155;
+    --tip: #22262c; --shadow: 0 8px 28px rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 13.5px; line-height: 1.5; }
+button, input, select { font: inherit; color: inherit; }
+.app { display: grid; grid-template-columns: 200px 250px minmax(0, 1fr); min-height: 100%; }
+/* sidebar */
+.side { background: var(--side); border-right: 1px solid var(--line); padding: 14px 10px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; padding: 2px 8px 14px; }
+.brand i { width: 22px; height: 22px; border-radius: 6px; background: var(--accent); color: var(--accent-fg); font-style: normal; font-size: 12px; display: grid; place-items: center; }
+.navh { font-size: 11.5px; color: var(--faint); padding: 10px 8px 4px; }
+.nav a { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 7px; color: var(--muted); text-decoration: none; }
+.nav a:hover { background: var(--line2); color: var(--fg); }
+.nav a[aria-current="page"] { background: var(--accent-weak); color: var(--fg); font-weight: 600; }
+.nav svg { width: 15px; height: 15px; flex: none; }
+/* filter panel */
+.filters { background: var(--panel); border-right: 1px solid var(--line); padding: 16px 14px 40px; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+.fh { font-size: 12px; color: var(--muted); font-weight: 600; }
+.fg { display: flex; flex-direction: column; gap: 8px; }
+.fg > .seg { align-self: flex-start; }
+.fl { font-size: 11.5px; color: var(--faint); }
+.row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 4px 9px; font-size: 12.5px; cursor: pointer; line-height: 1.4; }
+.chip:hover { border-color: var(--faint); }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.chip:focus-visible, .nav a:focus-visible, select:focus-visible, input:focus-visible, th button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; background: var(--panel); padding: 4px 11px; font-size: 12.5px; cursor: pointer; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); font-weight: 600; }
+select, input[type="date"], input[type="search"] { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 5px 8px; font-size: 12.5px; min-width: 0; }
+input[type="date"] { width: 100%; }
+.dates { display: grid; grid-template-columns: 1fr auto 1fr; gap: 4px; align-items: center; }
+.summary { font-size: 12px; color: var(--muted); background: var(--bg); border-radius: 8px; padding: 8px 10px; line-height: 1.6; }
+.summary b { color: var(--fg); font-weight: 600; }
+/* main */
+.main { padding: 18px 22px 60px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.top h1 { font-size: 20px; margin: 0; font-weight: 700; }
+.badge { font-size: 11.5px; border: 1px solid var(--line); border-radius: 5px; padding: 1px 7px; color: var(--muted); background: var(--panel); }
+.top .sub { font-size: 12px; color: var(--muted); }
+.banner { background: var(--banner); border: 1px solid var(--banner-line); border-radius: 8px; padding: 9px 12px; font-size: 12px; }
+.banner b { font-weight: 600; }
+.drill { display: inline-flex; gap: 8px; align-items: center; font-size: 12px; background: var(--accent-weak); border-radius: 6px; padding: 4px 8px; }
+.drill button { border: 0; background: none; color: var(--accent); cursor: pointer; font-weight: 600; padding: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.ch { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 10px; }
+.ch h2 { font-size: 14px; margin: 0; font-weight: 700; }
+.ch .hint { font-size: 11.5px; color: var(--faint); }
+.ch .right { margin-left: auto; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kpi .l { font-size: 12px; color: var(--muted); }
+.kpi .v { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.kpi .f { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.good { color: var(--ok); } .bad { color: var(--bad); }
+.grid2 { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; }
+.chart { position: relative; width: 100%; min-height: 240px; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { font-family: var(--font); }
+.chart .tick text { fill: var(--muted); font-size: 11px; }
+.chart .tick line { stroke: var(--line2); }
+.chart .domain { stroke: var(--line); }
+.tip { position: absolute; pointer-events: none; background: var(--tip); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 8px; padding: 7px 10px; font-size: 12px; white-space: nowrap; z-index: 5; font-variant-numeric: tabular-nums; }
+.tip .k { color: var(--muted); }
+.tip .sw { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; margin-bottom: 6px; }
+.legend button { border: 0; background: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 2px 0; color: var(--fg); }
+.legend button[aria-pressed="false"] { opacity: .35; }
+.legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 12.5px; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line2); text-align: right; white-space: nowrap; }
+th { color: var(--muted); font-weight: 500; font-size: 12px; }
+th:first-child, td:first-child { text-align: left; }
+th button { border: 0; background: none; padding: 0; color: inherit; font: inherit; cursor: pointer; }
+th button[aria-sort] { color: var(--fg); font-weight: 600; }
+tr.total td { font-weight: 700; background: var(--bg); }
+tbody tr.click { cursor: pointer; }
+tbody tr.click:hover td { background: var(--line2); }
+tr.sel td { background: var(--accent-weak) !important; }
+td .s { display: block; font-size: 11px; color: var(--faint); font-weight: 400; }
+td.name { white-space: normal; min-width: 13em; text-align: left; }
+td.name .s { margin-top: 1px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.stack { display: flex; height: 26px; border-radius: 6px; overflow: hidden; }
+.stack div { height: 100%; min-width: 2px; }
+.stack-legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px 12px; margin-top: 10px; font-size: 12px; }
+.stack-legend span { display: flex; justify-content: space-between; gap: 6px; }
+.stack-legend em { font-style: normal; color: var(--muted); font-variant-numeric: tabular-nums; }
+.empty { color: var(--muted); font-size: 12.5px; padding: 20px 0; text-align: center; }
+.status { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.search { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.search input { flex: 1; min-width: 200px; padding: 7px 10px; font-size: 13px; }
+.view[hidden] { display: none !important; }
+.loading .main > *:not(.top):not(.status) { opacity: .4; }
+.mtoggle { display: none; }
+.fbody { display: flex; flex-direction: column; gap: 16px; }
+@media (max-width: 1100px) {
+  .app { grid-template-columns: 64px 240px minmax(0, 1fr); }
+  .brand span, .nav a span, .navh { display: none; }
+  .nav a { justify-content: center; }
+}
+@media (max-width: 820px) {
+  .app { display: block; }
+  .side { position: sticky; top: 0; height: auto; z-index: 10; display: flex; align-items: center; gap: 6px; padding: 8px max(12px, env(safe-area-inset-left, 0px)); border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .brand { padding: 0 6px 0 0; } .brand span { display: inline; }
+  .nav { display: flex; gap: 2px; } .nav a { padding: 6px 9px; white-space: nowrap; } .nav a span { display: inline; } .nav svg { display: none; }
+  .filters { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 12px max(16px, env(safe-area-inset-left, 0px)); }
+  .filters .fbody[hidden] { display: none !important; }
+  .fbody > .fh { display: none; }
+  .mtoggle { display: flex; justify-content: space-between; align-items: center; border: 0; background: none; padding: 0; width: 100%; font-weight: 600; cursor: pointer; }
+  .main { padding: 14px max(16px, env(safe-area-inset-left, 0px)) 48px max(16px, env(safe-area-inset-right, 0px)); }
+  .grid2 { grid-template-columns: minmax(0, 1fr); }
+  .kpi .v { font-size: 19px; }
+}
+@media (min-width: 821px) { .filters .fbody[hidden] { display: flex !important; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app loading" id="app">
+  <nav class="side" aria-label="메뉴">
+    <div class="brand"><i>B</i><span>브랜든</span></div>
+    <div class="navh">분석</div>
+    <div class="nav" id="nav">
+      <a href="#overview" data-view="overview"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg><span>매출 현황</span></a>
+      <a href="#category" data-view="category"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 13l4-5 3 3 5-7"/></svg><span>카테고리</span></a>
+      <a href="#product" data-view="product"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><span>상품 조회</span></a>
+      <a href="#promo" data-view="promo"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg><span>프로모션</span></a>
+    </div>
+  </nav>
+
+  <aside class="filters" aria-label="조회 조건">
+    <button class="mtoggle" id="mtoggle" type="button" aria-expanded="false">조회 조건 <span id="mtsum" class="fl"></span></button>
+    <div class="fbody" id="fbody" hidden>
+      <div class="fh">조회 조건</div>
+      <div class="fg">
+        <div class="fl">단위</div>
+        <div class="seg" role="group" aria-label="집계 단위">
+          <button type="button" data-grain="월">월</button><button type="button" data-grain="주">주</button><button type="button" data-grain="일">일</button>
+        </div>
+      </div>
+      <div class="fg">
+        <div class="fl">최근</div>
+        <div class="row" id="presets">
+          <button type="button" class="chip" data-preset="yesterday">어제</button>
+          <button type="button" class="chip" data-preset="7">최근 7일</button>
+          <button type="button" class="chip" data-preset="28">최근 28일</button>
+          <button type="button" class="chip" data-preset="3m">최근 3개월</button>
+          <button type="button" class="chip" data-preset="6m">최근 6개월</button>
+          <button type="button" class="chip" data-preset="ytd">올해</button>
+          <button type="button" class="chip" data-preset="all">전체</button>
+        </div>
+      </div>
+      <div class="fg">
+        <div class="fl">월별</div>
+        <div class="row">
+          <select id="month" aria-label="월 선택"></select>
+          <button type="button" class="chip" data-preset="thism">당월</button>
+          <button type="button" class="chip" data-preset="lastm">전월</button>
+        </div>
+      </div>
+      <div class="fg">
+        <div class="fl">직접 선택</div>
+        <div class="dates"><input type="date" id="from" aria-label="시작일"><span class="fl">~</span><input type="date" id="to" aria-label="종료일"></div>
+      </div>
+      <div class="fg">
+        <div class="fl">비교 기간</div>
+        <div class="seg" role="group" aria-label="비교 기간">
+          <button type="button" data-cmp="prev">직전 기간</button><button type="button" data-cmp="custom">직접</button><button type="button" data-cmp="none">없음</button>
+        </div>
+        <div class="dates" id="cmpdates" hidden><input type="date" id="cfrom" aria-label="비교 시작일"><span class="fl">~</span><input type="date" id="cto" aria-label="비교 종료일"></div>
+      </div>
+      <div class="fg">
+        <div class="fl">매출 기준</div>
+        <div class="seg" role="group" aria-label="매출 기준">
+          <button type="button" data-metric="순">순매출</button><button type="button" data-metric="총">총매출</button>
+        </div>
+      </div>
+      <div class="fg">
+        <div class="fl">카테고리 <span id="catcount"></span></div>
+        <div class="row" id="cats"></div>
+      </div>
+      <div class="summary" id="summary">—</div>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="top">
+      <h1 id="title">매출 현황</h1>
+      <span class="badge">데이터 기준 <span id="asof">—</span></span>
+      <span class="sub">네이버 스마트스토어 · 네이버 RAW 기준</span>
+    </div>
+    <div class="banner"><b>이 화면의 금액 기준</b> · 총매출 = 네이버 판매금액(총) · 순매출 = 총매출 − 환불금액 · 부가세 포함 · 데이터는 <span id="first">—</span>부터 있어요. 불러온 시각 <span id="fetched">—</span></div>
+    <div class="status" id="status" hidden></div>
+    <div id="drillbox"></div>
+
+    <!-- 매출 현황 -->
+    <section class="view" data-view="overview">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="kpis" id="kpis"></div>
+        <div class="card">
+          <div class="ch"><h2>기간별 매출 추이</h2><span class="hint">막대 클릭 = 그 기간만 보기 (다시 클릭하면 해제) · 점선 = 비교 기간</span></div>
+          <div class="chart" id="bars"></div>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <div class="ch"><h2>카테고리별 실적</h2><span class="hint">행 클릭 = 카테고리 필터</span></div>
+            <div class="scroll" id="cattable"></div>
+          </div>
+          <div class="card">
+            <div class="ch"><h2>카테고리 비중</h2></div>
+            <div id="share"></div>
+            <div class="ch" style="margin-top:18px"><h2>상품 TOP 10</h2><span class="hint">클릭 = 상품 조회</span></div>
+            <div class="scroll" id="top10"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 카테고리 -->
+    <section class="view" data-view="category" hidden>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="ch"><h2>카테고리별 매출 추이</h2><span class="hint">범례 클릭 = 켜기/끄기</span></div>
+          <div class="legend" id="catlegend"></div>
+          <div class="chart" id="catlines"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><h2>카테고리별 실적</h2><span class="hint">열 제목 클릭 = 정렬 · 행 클릭 = 카테고리 필터</span></div>
+          <div class="scroll" id="cattable2"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 상품 조회 -->
+    <section class="view" data-view="product" hidden>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="search"><input type="search" id="q" placeholder="상품명, 옵션, 상품번호로 검색" aria-label="상품 검색"><span class="fl" id="qcount"></span></div>
+        </div>
+        <div class="card" id="pdetail" hidden>
+          <div class="ch"><h2 id="pname">—</h2><span class="hint" id="pinfo"></span><button type="button" class="chip right" id="pclose">닫기</button></div>
+          <div class="kpis" id="pkpis"></div>
+          <div class="chart" id="pchart" style="margin-top:14px"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><h2>상품별 실적</h2><span class="hint">열 제목 클릭 = 정렬 · 행 클릭 = 상세 보기</span></div>
+          <div class="scroll" id="ptable"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 프로모션 -->
+    <section class="view" data-view="promo" hidden>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="ch"><h2>프로모션</h2><span class="hint">행사 기간과 바로 앞 같은 일수 기간을 하루 평균으로 비교해요</span>
+            <span class="right row"><select id="promosel" aria-label="프로모션 선택"></select><button type="button" class="chip" id="promoapply">이 기간으로 조회</button></span></div>
+          <div class="kpis" id="promokpis"></div>
+          <div class="chart" id="promochart" style="margin-top:14px"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><h2>카테고리별 행사 효과</h2></div>
+          <div class="scroll" id="promocat"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script>
+/* 데이터 주소는 config.js 의 CSV_URL */
+const CSV_URL = (window.CSV_URL || '').trim();
+/* 프로모션 목록: 한 줄씩 추가하면 프로모션 화면에 생겨요 */
+const PROMOS = [
+  { 이름: '넾다세일', 시작: '2026-10-26', 종료: '2026-11-08' }
+];
+const PALETTE = ['#4f46e5', '#16a34a', '#ea580c', '#0891b2', '#db2777', '#ca8a04', '#7c3aed', '#059669', '#dc2626', '#2563eb', '#9333ea', '#65a30d', '#0d9488', '#b45309'];
+
+/* ---------- 상태 ---------- */
+const S = { view: 'overview', grain: '주', metric: '순', from: null, to: null, preset: '28', cmp: 'prev', cfrom: null, cto: null, cats: new Set(), drill: null, product: null, q: '', psort: 'v', psdir: -1, csort: 'v', csdir: -1, hidden: new Set(), promo: 0 };
+let D = null; // { rows, products, cats, first, last }
+
+/* ---------- 유틸 ---------- */
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const P = (s) => new Date(s + 'T00:00:00Z');
+const iso = (d) => d.toISOString().slice(0, 10);
+const add = (s, n) => { const d = P(s); d.setUTCDate(d.getUTCDate() + n); return iso(d); };
+const days = (a, b) => Math.round((P(b) - P(a)) / 864e5) + 1;
+const monthStart = (s) => s.slice(0, 7) + '-01';
+const monthEnd = (s) => { const d = P(monthStart(s)); d.setUTCMonth(d.getUTCMonth() + 1); d.setUTCDate(0); return iso(d); };
+const addMonths = (s, n) => { const d = P(monthStart(s)); d.setUTCMonth(d.getUTCMonth() + n); return iso(d); };
+const wk = (s) => { const d = P(s); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return iso(d); };
+const bucket = (s) => (S.grain === '월' ? s.slice(0, 7) : S.grain === '주' ? wk(s) : s);
+const md = (s) => (+s.slice(5, 7)) + '/' + (+s.slice(8, 10));
+const int = d3.format(',.0f');
+const won = (n) => {
+  if (n == null || !isFinite(n)) return '—';
+  const a = Math.abs(n);
+  if (a >= 1e8) return d3.format(',.2f')(n / 1e8) + '억';
+  if (a >= 1e7) return d3.format(',.0f')(n / 1e4) + '만';
+  return int(n);
+};
+const shortAxis = (n) => { const a = Math.abs(n); if (a >= 1e8) return d3.format(',.1f')(n / 1e8).replace(/\.0$/, '') + '억'; if (a >= 1e4) return d3.format(',.0f')(n / 1e4) + '만'; return int(n); };
+const ratio = (x, y) => (x == null || !y ? null : (x / y - 1) * 100);
+const pct = (v) => (v == null || !isFinite(v) ? '—' : (v > 0 ? '▲' : v < 0 ? '▼' : '') + d3.format('.1f')(Math.abs(v)) + '%');
+const tone = (e, v) => { e.classList.toggle('good', v != null && v > 0); e.classList.toggle('bad', v != null && v < 0); return e; };
+const F = () => (S.metric === '총' ? 'g' : 's');
+const mname = () => (S.metric === '총' ? '총매출' : '순매출');
+const catColor = (c) => { const i = D.cats.indexOf(c); return c === '미분류' ? '#9aa1aa' : PALETTE[i % PALETTE.length]; };
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const tipOf = (host) => {
+  const t = el('div', 'tip'); t.hidden = true; host.append(t);
+  return {
+    show(lines, x, y) {
+      t.replaceChildren();
+      lines.forEach(([k, v, color]) => { const r = el('div'); if (color) { const sw = el('span', 'sw'); sw.style.background = color; r.append(sw); } if (k) r.append(el('span', 'k', k + ' ')); r.append(document.createTextNode(v)); t.append(r); });
+      t.hidden = false;
+      t.style.left = Math.max(0, Math.min(host.clientWidth - t.offsetWidth, x - t.offsetWidth / 2)) + 'px';
+      t.style.top = Math.max(0, y - t.offsetHeight - 12) + 'px';
+    },
+    hide() { t.hidden = true; }
+  };
+};
+
+/* ---------- 데이터 ---------- */
+function parse(text) {
+  const rows = d3.csvParseRows(text);
+  if (!rows.length) throw new Error('CSV가 비어 있어요');
+  const H = rows[0].map((s) => s.trim());
+  const di = H.indexOf('일자');
+  const pi = H.indexOf('상품명') - 1;
+  if (di < 0 || H[di + 1] !== '상품번호' || H[di + 4] !== '매출_순') throw new Error("'대시보드_집계' 탭에서 상품별 일별 열(일자, 상품번호…)을 찾지 못했어요.");
+  if (pi < 0 || H[pi] !== '상품번호') throw new Error("'대시보드_집계' 탭에서 상품 목록 열(상품번호, 상품명…)을 찾지 못했어요.");
+  const products = new Map();
+  rows.slice(1).forEach((r) => {
+    const id = (r[pi] || '').trim(); if (!id) return;
+    products.set(id, { id, name: (r[pi + 1] || '').trim(), cat: (r[pi + 2] || '').trim() || '미분류', opt: (r[pi + 3] || '').trim() });
+  });
+  const num = (x) => { const v = Number(String(x || '').replace(/,/g, '').trim()); return isFinite(v) ? v : 0; };
+  const out = [];
+  rows.slice(1).forEach((r) => {
+    const d = (r[di] || '').trim().replace(/\./g, '-').replace(/\s/g, ''); if (!d) return;
+    const p = (r[di + 1] || '').trim();
+    const info = products.get(p);
+    out.push({ d, p, c: info ? info.cat : '미분류', n: num(r[di + 2]), g: num(r[di + 3]), s: num(r[di + 4]), q: num(r[di + 5]) });
+  });
+  if (!out.length) throw new Error('상품별 일별 데이터가 비어 있어요');
+  out.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : 0));
+  const tot = d3.rollup(out, (v) => d3.sum(v, (r) => r.g), (r) => r.c);
+  const cats = Array.from(tot.keys()).sort((a, b) => (a === '미분류') - (b === '미분류') || tot.get(b) - tot.get(a));
+  return { rows: out, products, cats, first: out[0].d, last: out[out.length - 1].d };
+}
+
+/* ---------- 기간 ---------- */
+function applyPreset(k) {
+  const L = D.last;
+  S.preset = k; S.drill = null;
+  if (k === 'yesterday') { S.from = S.to = L; }
+  else if (k === '7' || k === '28') { S.from = add(L, -(+k - 1)); S.to = L; }
+  else if (k === '3m' || k === '6m') { S.from = add(iso(new Date(Date.UTC(+L.slice(0, 4), +L.slice(5, 7) - 1 - (k === '3m' ? 3 : 6), +L.slice(8, 10)))), 1); S.to = L; }
+  else if (k === 'ytd') { S.from = L.slice(0, 4) + '-01-01'; S.to = L; }
+  else if (k === 'all') { S.from = D.first; S.to = L; }
+  else if (k === 'thism') { S.from = monthStart(L); S.to = L; }
+  else if (k === 'lastm') { const m = addMonths(L, -1); S.from = m; S.to = monthEnd(m); }
+  else if (/^\d{4}-\d{2}$/.test(k)) { S.from = k + '-01'; S.to = monthEnd(k + '-01') > L ? L : monthEnd(k + '-01'); }
+  if (S.from < D.first) S.from = D.first;
+  if (k === 'yesterday' || k === '7') S.grain = '일';
+  else if (k === '28' || k === 'thism' || k === 'lastm' || /^\d{4}-\d{2}$/.test(k)) S.grain = S.grain === '월' ? '일' : S.grain;
+  else if (k === 'ytd' || k === 'all' || k === '6m') S.grain = S.grain === '일' ? '주' : S.grain;
+}
+const range = () => (S.drill ? S.drill : { a: S.from, b: S.to });
+function cmpRange() {
+  const { a, b } = range();
+  if (S.cmp === 'none') return null;
+  if (S.cmp === 'custom') return S.cfrom && S.cto && S.cfrom <= S.cto ? { a: S.cfrom, b: S.cto } : null;
+  const n = days(a, b);
+  const isMonth = a === monthStart(a) && (b === monthEnd(a) || b === D.last) && a.slice(0, 7) === b.slice(0, 7);
+  if (isMonth) { const pa = addMonths(a, -1); const pe = add(pa, n - 1); return { a: pa, b: pe > monthEnd(pa) ? monthEnd(pa) : pe }; }
+  return { a: add(a, -n), b: add(a, -1) };
+}
+const label = (r) => (r ? (r.a === r.b ? r.a : r.a + ' ~ ' + r.b) : '없음');
+
+/* ---------- 집계 ---------- */
+const catOk = (r) => !S.cats.size || S.cats.has(r.c);
+function sumRange(rg, pred) {
+  const t = { s: 0, g: 0, n: 0, q: 0, days: rg ? days(rg.a, rg.b) : 0 };
+  if (!rg) return null;
+  for (const r of D.rows) { if (r.d < rg.a) continue; if (r.d > rg.b) break; if (!catOk(r) || (pred && !pred(r))) continue; t.s += r.s; t.g += r.g; t.n += r.n; t.q += r.q; }
+  t.dayEnd = rg.b > D.last ? D.last : rg.b; t.days = Math.max(0, days(rg.a, t.dayEnd));
+  return t;
+}
+function groupRange(rg, key, pred) {
+  const m = new Map(); if (!rg) return m;
+  for (const r of D.rows) { if (r.d < rg.a) continue; if (r.d > rg.b) break; if (!catOk(r) || (pred && !pred(r))) continue; const k = key(r); let t = m.get(k); if (!t) { t = { s: 0, g: 0, n: 0, q: 0 }; m.set(k, t); } t.s += r.s; t.g += r.g; t.n += r.n; t.q += r.q; }
+  return m;
+}
+
+/* ---------- 그리기: 공통 ---------- */
+function kpiCards(host, cur, prev, extra) {
+  const f = F();
+  host.replaceChildren();
+  const items = [
+    [mname(), won(cur[f]), int(cur[f]) + '원', prev ? ratio(cur[f], prev[f]) : null],
+    ['일평균 ' + mname(), won(cur.days ? cur[f] / cur.days : null), cur.days + '일', prev ? ratio(cur.days ? cur[f] / cur.days : null, prev.days ? prev[f] / prev.days : null) : null],
+    ['결제건수', int(cur.n) + '건', '', prev ? ratio(cur.n, prev.n) : null],
+    ['객단가', won(cur.n ? cur[f] / cur.n : null), mname() + ' ÷ 결제건수', prev ? ratio(cur.n ? cur[f] / cur.n : null, prev.n ? prev[f] / prev.n : null) : null],
+    ['판매수량', int(cur.q) + '개', '', prev ? ratio(cur.q, prev.q) : null]
+  ].concat(extra || []);
+  items.forEach(([l, v, sub, c]) => {
+    const k = el('div', 'kpi'); k.append(el('div', 'l', l), el('div', 'v', v));
+    const f2 = el('div', 'f');
+    if (prev) { f2.append(tone(el('b', null, pct(c)), c), document.createTextNode(' 비교 대비')); if (sub) f2.append(document.createTextNode(' · ' + sub)); }
+    else f2.textContent = sub || ' ';
+    k.append(f2); host.append(k);
+  });
+}
+function axisSetup(svg, y, W, H, mb) {
+  const gy = svg.append('g'); gy.call(d3.axisLeft(y).ticks(4).tickSize(0).tickFormat(shortAxis));
+  let ml = 0; gy.selectAll('text').each(function () { ml = Math.max(ml, this.getComputedTextLength()); }); ml = Math.ceil(ml) + 10;
+  gy.attr('transform', `translate(${ml},0)`).call(d3.axisLeft(y).ticks(4).tickSize(-(W - ml - 4)).tickFormat(shortAxis));
+  gy.select('.domain').remove(); gy.selectAll('.tick text').attr('dx', -6);
+  return ml;
+}
+const bucketLabel = (k) => (S.grain === '월' ? k.slice(2).replace('-', '-') : md(k));
+const bucketTitle = (k) => (S.grain === '월' ? k.slice(0, 4) + '년 ' + (+k.slice(5)) + '월' : S.grain === '주' ? md(k) + '~' + md(add(k, 6)) + ' 주' : k);
+const bucketRange = (k) => (S.grain === '월' ? { a: k + '-01', b: monthEnd(k + '-01') } : S.grain === '주' ? { a: k, b: add(k, 6) } : { a: k, b: k });
+
+/* ---------- 매출 현황 ---------- */
+function drawOverview() {
+  const rg = range(), cg = cmpRange(), f = F();
+  const cur = sumRange(rg), prev = sumRange(cg);
+  kpiCards($('kpis'), cur, prev);
+  drawBars(rg, cg);
+  catTable($('cattable'), rg, cg, false);
+  drawShare(rg);
+  const pm = groupRange(rg, (r) => r.p);
+  const top = Array.from(pm, ([id, t]) => ({ id, ...t })).sort((a, b) => b[f] - a[f]).slice(0, 10);
+  const host = $('top10'); host.replaceChildren();
+  if (!top.length) { host.append(el('div', 'empty', '이 기간에는 판매된 상품이 없어요')); return; }
+  const tbl = el('table'); const hr = tbl.createTHead().insertRow(); ['상품', mname(), '결제건수'].forEach((h) => hr.append(el('th', null, h)));
+  const tb = tbl.createTBody();
+  top.forEach((t, i) => {
+    const p = D.products.get(t.id) || { name: t.id, opt: '', cat: '미분류' };
+    const tr = tb.insertRow(); tr.className = 'click'; tr.tabIndex = 0;
+    const c1 = tr.insertCell(); c1.className = 'name'; c1.textContent = (i + 1) + '. ' + (p.opt || p.name); c1.append(el('span', 's', p.cat + ' · ' + t.id));
+    tr.insertCell().textContent = won(t[f]); tr.insertCell().textContent = int(t.n);
+    const go = () => { S.product = t.id; S.view = 'product'; syncHash(); render(); };
+    tr.onclick = go; tr.onkeydown = (e) => { if (e.key === 'Enter') go(); };
+  });
+  host.append(tbl);
+}
+function drawBars(rg, cg) {
+  const host = $('bars'), f = F(); host.replaceChildren();
+  const view = S.drill ? { a: S.from, b: S.to } : rg;
+  const m = groupRange(view, (r) => bucket(r.d));
+  const keys = []; for (let d = view.a; d <= (view.b > D.last ? D.last : view.b); d = add(d, 1)) { const k = bucket(d); if (keys[keys.length - 1] !== k) keys.push(k); }
+  const data = keys.map((k) => ({ k, ...(m.get(k) || { s: 0, g: 0, n: 0, q: 0 }) }));
+  if (!data.length) { host.append(el('div', 'empty', '표시할 데이터가 없어요')); return; }
+  let cdata = null;
+  if (cg && !S.drill) {
+    const cm = groupRange(cg, (r) => bucket(r.d)); const ck = [];
+    for (let d = cg.a; d <= cg.b; d = add(d, 1)) { const k = bucket(d); if (ck[ck.length - 1] !== k) ck.push(k); }
+    cdata = ck.map((k) => ({ k, ...(cm.get(k) || { s: 0, g: 0, n: 0, q: 0 }) }));
+  }
+  const W = Math.max(300, host.clientWidth), H = 260, mb = 26;
+  const svg = d3.select(host).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', `${S.grain}별 ${mname()} 막대 그래프`);
+  const ymax = d3.max(data.concat(cdata ? cdata.slice(0, data.length) : []), (d) => d[f]) || 1;
+  const y = d3.scaleLinear().domain([0, ymax]).nice().range([H - mb, 16]);
+  const ml = axisSetup(svg, y, W, H, mb);
+  const x = d3.scaleBand().domain(data.map((d) => d.k)).range([ml, W - 4]).padding(data.length > 40 ? 0.15 : 0.3);
+  const every = Math.max(1, Math.ceil(data.length / Math.max(2, Math.floor((W - ml) / 58))));
+  const gx = svg.append('g').attr('transform', `translate(0,${H - mb})`).call(d3.axisBottom(x).tickValues(data.map((d) => d.k).filter((_, i) => i % every === 0)).tickSize(0).tickFormat(bucketLabel));
+  gx.select('.domain').remove(); gx.selectAll('.tick text').attr('dy', 10);
+  const selK = S.drill ? S.drill.k : null;
+  svg.append('g').selectAll('rect').data(data).join('rect')
+    .attr('x', (d) => x(d.k)).attr('width', x.bandwidth()).attr('y', (d) => y(Math.max(0, d[f]))).attr('height', (d) => Math.abs(y(0) - y(d[f]))).attr('rx', 2)
+    .style('fill', 'var(--accent)').style('opacity', (d) => (selK && d.k !== selK ? 0.25 : 0.9));
+  if (data.length <= 16) svg.append('g').selectAll('text').data(data).join('text').attr('x', (d) => x(d.k) + x.bandwidth() / 2).attr('y', (d) => y(Math.max(0, d[f])) - 5)
+    .attr('text-anchor', 'middle').style('font-size', '10.5px').style('fill', 'var(--muted)').text((d) => won(d[f]));
+  if (cdata) {
+    const pts = data.map((d, i) => (cdata[i] ? { x: x(d.k) + x.bandwidth() / 2, v: cdata[i][f], k: cdata[i].k } : null)).filter(Boolean);
+    svg.append('path').datum(pts).attr('d', d3.line().x((p) => p.x).y((p) => y(p.v))).style('fill', 'none').style('stroke', 'var(--muted)').style('stroke-dasharray', '4 3').style('stroke-width', 1.5);
+    svg.append('g').selectAll('circle').data(pts).join('circle').attr('cx', (p) => p.x).attr('cy', (p) => y(p.v)).attr('r', 2.5).style('fill', 'var(--muted)');
+  }
+  const t = tipOf(host);
+  svg.append('g').selectAll('rect').data(data).join('rect').attr('x', (d) => x(d.k) - (x.step() - x.bandwidth()) / 2).attr('width', x.step()).attr('y', 0).attr('height', H - mb)
+    .style('fill', 'transparent').style('cursor', 'pointer')
+    .on('pointerenter', (ev, d) => {
+      const i = data.indexOf(d), s = host.clientWidth / W, lines = [[null, bucketTitle(d.k)], [mname(), int(d[f]) + '원'], ['결제건수', int(d.n) + '건']];
+      if (cdata && cdata[i]) lines.push(['비교 ' + bucketTitle(cdata[i].k), int(cdata[i][f]) + '원']);
+      t.show(lines, (x(d.k) + x.bandwidth() / 2) * s, y(Math.max(0, d[f])) * s);
+    })
+    .on('pointerleave', () => t.hide())
+    .on('click', (ev, d) => {
+      if (S.drill && S.drill.k === d.k) S.drill = null;
+      else { const br = bucketRange(d.k); S.drill = { k: d.k, a: br.a < S.from ? S.from : br.a, b: br.b > S.to ? S.to : br.b }; }
+      render();
+    });
+}
+function catRows(rg, cg) {
+  const f = F();
+  const cur = groupRange(rg, (r) => r.c), prev = groupRange(cg, (r) => r.c);
+  const all = sumRange(rg), allPrev = sumRange(cg);
+  const rows = Array.from(new Set([...cur.keys(), ...prev.keys()])).map((c) => {
+    const a = cur.get(c) || { s: 0, g: 0, n: 0, q: 0 }, b = prev.get(c);
+    return { c, v: a[f], n: a.n, q: a.q, aov: a.n ? a[f] / a.n : null, share: all[f] ? a[f] / all[f] * 100 : null, chg: b ? ratio(a[f], b[f]) : null, pv: b ? b[f] : null };
+  }).filter((r) => r.v || r.n || r.pv);
+  return { rows, all, allPrev };
+}
+function catTable(host, rg, cg, sortable) {
+  const f = F(); host.replaceChildren();
+  const { rows, all, allPrev } = catRows(rg, cg);
+  const key = sortable ? S.csort : 'v', dir = sortable ? S.csdir : -1;
+  rows.sort((a, b) => (key === 'c' ? a.c.localeCompare(b.c, 'ko') * -dir : ((a[key] ?? -Infinity) - (b[key] ?? -Infinity)) * dir));
+  if (!rows.length) { host.append(el('div', 'empty', '이 기간에는 매출이 없어요')); return; }
+  const tbl = el('table'), hr = tbl.createTHead().insertRow();
+  const cols = [['c', '카테고리'], ['v', mname()], ['share', '비중'], ['n', '결제건수'], ['aov', '객단가'], ['chg', '비교 대비']];
+  cols.forEach(([k, h]) => {
+    const th = el('th');
+    if (sortable) { const b = el('button', null, h + (S.csort === k ? (S.csdir < 0 ? ' ▼' : ' ▲') : '')); if (S.csort === k) b.setAttribute('aria-sort', S.csdir < 0 ? 'descending' : 'ascending'); b.onclick = () => { if (S.csort === k) S.csdir *= -1; else { S.csort = k; S.csdir = -1; } render(); }; th.append(b); }
+    else th.textContent = h;
+    hr.append(th);
+  });
+  const tb = tbl.createTBody();
+  const tot = tb.insertRow(); tot.className = 'total';
+  tot.insertCell().textContent = S.cats.size ? '선택 합계' : '합계';
+  tot.insertCell().textContent = won(all[f]); tot.insertCell().textContent = '100%'; tot.insertCell().textContent = int(all.n);
+  tot.insertCell().textContent = won(all.n ? all[f] / all.n : null);
+  const tc = tot.insertCell(); const tcv = allPrev ? ratio(all[f], allPrev[f]) : null; tc.textContent = pct(tcv); tone(tc, tcv);
+  rows.forEach((r) => {
+    const tr = tb.insertRow(); tr.className = 'click' + (S.cats.has(r.c) ? ' sel' : ''); tr.tabIndex = 0;
+    const c0 = tr.insertCell(); const dot = el('span', 'dot'); dot.style.background = catColor(r.c); c0.append(dot, document.createTextNode(r.c));
+    tr.insertCell().textContent = won(r.v);
+    tr.insertCell().textContent = r.share == null ? '—' : d3.format('.1f')(r.share) + '%';
+    tr.insertCell().textContent = int(r.n);
+    tr.insertCell().textContent = won(r.aov);
+    const cc = tr.insertCell(); cc.textContent = pct(r.chg); tone(cc, r.chg);
+    const go = () => { if (S.cats.has(r.c)) S.cats.delete(r.c); else S.cats.add(r.c); S.drill = null; syncHash(); render(); };
+    tr.onclick = go; tr.onkeydown = (e) => { if (e.key === 'Enter') go(); };
+  });
+  host.append(tbl);
+}
+function drawShare(rg) {
+  const host = $('share'), f = F(); host.replaceChildren();
+  const m = groupRange(rg, (r) => r.c);
+  const tot = d3.sum(Array.from(m.values()), (t) => Math.max(0, t[f]));
+  if (!tot) { host.append(el('div', 'empty', '이 기간에는 매출이 없어요')); return; }
+  const items = Array.from(m, ([c, t]) => ({ c, v: Math.max(0, t[f]) })).filter((d) => d.v > 0).sort((a, b) => b.v - a.v);
+  const bar = el('div', 'stack'); bar.setAttribute('role', 'img'); bar.setAttribute('aria-label', '카테고리별 ' + mname() + ' 비중');
+  const t = tipOf(host); host.style.position = 'relative';
+  items.forEach((d) => { const s = el('div'); s.style.width = (d.v / tot * 100) + '%'; s.style.background = catColor(d.c);
+    s.onpointerenter = () => { const r = s.getBoundingClientRect(), h = host.getBoundingClientRect(); t.show([[d.c, d3.format('.1f')(d.v / tot * 100) + '% · ' + won(d.v), catColor(d.c)]], r.left - h.left + r.width / 2, r.top - h.top); };
+    s.onpointerleave = () => t.hide(); bar.append(s); });
+  const lg = el('div', 'stack-legend');
+  items.forEach((d) => { const s = el('span'); const n = el('span'); const dot = el('span', 'dot'); dot.style.background = catColor(d.c); n.append(dot, document.createTextNode(d.c)); s.append(n, el('em', null, d3.format('.1f')(d.v / tot * 100) + '%')); lg.append(s); });
+  host.append(bar, lg);
+}
+
+/* ---------- 카테고리 ---------- */
+function drawCategory() {
+  const rg = range(), cg = cmpRange(), f = F();
+  const host = $('catlines'), lg = $('catlegend'); host.replaceChildren(); lg.replaceChildren();
+  const m = groupRange(rg, (r) => r.c + '|' + bucket(r.d));
+  const keys = []; for (let d = rg.a; d <= (rg.b > D.last ? D.last : rg.b); d = add(d, 1)) { const k = bucket(d); if (keys[keys.length - 1] !== k) keys.push(k); }
+  const totals = groupRange(rg, (r) => r.c);
+  const cats = Array.from(totals.keys()).sort((a, b) => totals.get(b)[f] - totals.get(a)[f]);
+  cats.forEach((c) => {
+    const b = el('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(!S.hidden.has(c)));
+    const i = el('i'); i.style.background = catColor(c); b.append(i, document.createTextNode(c));
+    b.onclick = () => { if (S.hidden.has(c)) S.hidden.delete(c); else S.hidden.add(c); drawCategory(); };
+    lg.append(b);
+  });
+  const series = cats.filter((c) => !S.hidden.has(c)).map((c) => ({ c, pts: keys.map((k) => ({ k, v: (m.get(c + '|' + k) || { s: 0, g: 0 })[f] })) }));
+  if (!keys.length || !series.length) { host.append(el('div', 'empty', '표시할 데이터가 없어요')); }
+  else {
+    const W = Math.max(300, host.clientWidth), H = 300, mb = 26;
+    const svg = d3.select(host).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', '카테고리별 ' + mname() + ' 추이 선 그래프');
+    const y = d3.scaleLinear().domain([0, d3.max(series, (s) => d3.max(s.pts, (p) => p.v)) || 1]).nice().range([H - mb, 16]);
+    const ml = axisSetup(svg, y, W, H, mb);
+    const x = d3.scalePoint().domain(keys).range([ml + 8, W - 12]);
+    const every = Math.max(1, Math.ceil(keys.length / Math.max(2, Math.floor((W - ml) / 58))));
+    const gx = svg.append('g').attr('transform', `translate(0,${H - mb})`).call(d3.axisBottom(x).tickValues(keys.filter((_, i) => i % every === 0)).tickSize(0).tickFormat(bucketLabel));
+    gx.select('.domain').remove(); gx.selectAll('.tick text').attr('dy', 10);
+    series.forEach((s) => {
+      svg.append('path').datum(s.pts).attr('d', d3.line().x((p) => x(p.k)).y((p) => y(p.v))).style('fill', 'none').style('stroke', catColor(s.c)).style('stroke-width', 2);
+      if (keys.length <= 24) svg.append('g').selectAll('circle').data(s.pts).join('circle').attr('cx', (p) => x(p.k)).attr('cy', (p) => y(p.v)).attr('r', 3).style('fill', 'var(--panel)').style('stroke', catColor(s.c)).style('stroke-width', 1.5);
+    });
+    const t = tipOf(host);
+    const guide = svg.append('line').attr('y1', 16).attr('y2', H - mb).style('stroke', 'var(--faint)').style('opacity', 0);
+    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - ml).attr('height', H).style('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const mx = d3.pointer(ev)[0]; let best = keys[0], bd = Infinity; keys.forEach((k) => { const dd = Math.abs(x(k) - mx); if (dd < bd) { bd = dd; best = k; } });
+        guide.attr('x1', x(best)).attr('x2', x(best)).style('opacity', 1);
+        const lines = [[null, bucketTitle(best)]].concat(series.map((s) => ({ c: s.c, v: s.pts.find((p) => p.k === best).v })).sort((a, b) => b.v - a.v).slice(0, 8).map((d) => [d.c, won(d.v), catColor(d.c)]));
+        const sc = host.clientWidth / W; t.show(lines, x(best) * sc, 30);
+      })
+      .on('pointerleave', () => { t.hide(); guide.style('opacity', 0); });
+  }
+  catTable($('cattable2'), rg, cg, true);
+}
+
+/* ---------- 상품 조회 ---------- */
+function drawProduct() {
+  const rg = range(), cg = cmpRange(), f = F();
+  const cur = groupRange(rg, (r) => r.p), prev = groupRange(cg, (r) => r.p);
+  const q = S.q.trim().toLowerCase();
+  let rows = Array.from(new Set([...cur.keys()])).map((id) => {
+    const p = D.products.get(id) || { id, name: id, opt: '', cat: '미분류' }, a = cur.get(id), b = prev.get(id);
+    return { id, p, v: a[f], n: a.n, q: a.q, aov: a.n ? a[f] / a.n : null, chg: b ? ratio(a[f], b[f]) : null };
+  });
+  if (q) rows = rows.filter((r) => (r.p.name + ' ' + r.p.opt + ' ' + r.id + ' ' + r.p.cat).toLowerCase().includes(q));
+  const key = S.psort, dir = S.psdir;
+  rows.sort((a, b) => (key === 'name' ? (a.p.opt || a.p.name).localeCompare(b.p.opt || b.p.name, 'ko') * -dir : ((a[key] ?? -Infinity) - (b[key] ?? -Infinity)) * dir));
+  $('qcount').textContent = rows.length + '개 상품';
+  const host = $('ptable'); host.replaceChildren();
+  if (!rows.length) host.append(el('div', 'empty', q ? '검색 결과가 없어요' : '이 기간에는 판매된 상품이 없어요'));
+  else {
+    const tbl = el('table'), hr = tbl.createTHead().insertRow();
+    [['name', '상품'], ['v', mname()], ['n', '결제건수'], ['q', '수량'], ['aov', '객단가'], ['chg', '비교 대비']].forEach(([k, h]) => {
+      const th = el('th'), b = el('button', null, h + (S.psort === k ? (S.psdir < 0 ? ' ▼' : ' ▲') : ''));
+      if (S.psort === k) b.setAttribute('aria-sort', S.psdir < 0 ? 'descending' : 'ascending');
+      b.onclick = () => { if (S.psort === k) S.psdir *= -1; else { S.psort = k; S.psdir = -1; } drawProduct(); };
+      th.append(b); hr.append(th);
+    });
+    const tb = tbl.createTBody();
+    rows.slice(0, 300).forEach((r) => {
+      const tr = tb.insertRow(); tr.className = 'click' + (S.product === r.id ? ' sel' : ''); tr.tabIndex = 0;
+      const c1 = tr.insertCell(); c1.className = 'name'; const dot = el('span', 'dot'); dot.style.background = catColor(r.p.cat);
+      c1.append(dot, document.createTextNode(r.p.opt || r.p.name)); c1.append(el('span', 's', r.p.cat + ' · ' + r.p.name + ' · ' + r.id));
+      tr.insertCell().textContent = won(r.v); tr.insertCell().textContent = int(r.n); tr.insertCell().textContent = int(r.q); tr.insertCell().textContent = won(r.aov);
+      const cc = tr.insertCell(); cc.textContent = pct(r.chg); tone(cc, r.chg);
+      const go = () => { S.product = r.id; syncHash(); drawProduct(); $('pdetail').scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'nearest' }); };
+      tr.onclick = go; tr.onkeydown = (e) => { if (e.key === 'Enter') go(); };
+    });
+    host.append(tbl);
+  }
+  // 상세
+  const det = $('pdetail');
+  if (!S.product) { det.hidden = true; return; }
+  det.hidden = false;
+  const id = S.product, p = D.products.get(id) || { name: id, opt: '', cat: '미분류' };
+  $('pname').textContent = p.opt || p.name;
+  $('pinfo').textContent = p.cat + ' · ' + p.name + ' · ' + id;
+  const pred = (r) => r.p === id;
+  const savedCats = S.cats; S.cats = new Set();
+  const a = sumRange(rg, pred), b = sumRange(cg, pred);
+  kpiCards($('pkpis'), a, b);
+  const chost = $('pchart'); chost.replaceChildren();
+  const m = groupRange(rg, (r) => bucket(r.d), pred);
+  S.cats = savedCats;
+  const keys = []; for (let d = rg.a; d <= (rg.b > D.last ? D.last : rg.b); d = add(d, 1)) { const k = bucket(d); if (keys[keys.length - 1] !== k) keys.push(k); }
+  const data = keys.map((k) => ({ k, ...(m.get(k) || { s: 0, g: 0, n: 0, q: 0 }) }));
+  if (!data.length) return;
+  const W = Math.max(300, chost.clientWidth), H = 220, mb = 26;
+  const svg = d3.select(chost).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', '상품 ' + mname() + ' 추이');
+  const y = d3.scaleLinear().domain([0, d3.max(data, (d) => d[f]) || 1]).nice().range([H - mb, 14]);
+  const ml = axisSetup(svg, y, W, H, mb);
+  const x = d3.scaleBand().domain(keys).range([ml, W - 4]).padding(0.25);
+  const every = Math.max(1, Math.ceil(keys.length / Math.max(2, Math.floor((W - ml) / 58))));
+  const gx = svg.append('g').attr('transform', `translate(0,${H - mb})`).call(d3.axisBottom(x).tickValues(keys.filter((_, i) => i % every === 0)).tickSize(0).tickFormat(bucketLabel));
+  gx.select('.domain').remove(); gx.selectAll('.tick text').attr('dy', 10);
+  svg.append('g').selectAll('rect').data(data).join('rect').attr('x', (d) => x(d.k)).attr('width', x.bandwidth()).attr('y', (d) => y(Math.max(0, d[f]))).attr('height', (d) => Math.abs(y(0) - y(d[f]))).attr('rx', 2).style('fill', catColor(p.cat));
+  const t = tipOf(chost);
+  svg.append('g').selectAll('rect').data(data).join('rect').attr('x', (d) => x(d.k) - (x.step() - x.bandwidth()) / 2).attr('width', x.step()).attr('y', 0).attr('height', H - mb).style('fill', 'transparent')
+    .on('pointerenter', (ev, d) => { const s = chost.clientWidth / W; t.show([[null, bucketTitle(d.k)], [mname(), int(d[f]) + '원'], ['결제건수', int(d.n) + '건'], ['수량', int(d.q) + '개']], (x(d.k) + x.bandwidth() / 2) * s, y(Math.max(0, d[f])) * s); })
+    .on('pointerleave', () => t.hide());
+}
+
+/* ---------- 프로모션 ---------- */
+function drawPromo() {
+  const f = F(), pr = PROMOS[S.promo]; if (!pr) return;
+  const n = days(pr.시작, pr.종료), base = { a: add(pr.시작, -n), b: add(pr.시작, -1) }, cur = { a: pr.시작, b: pr.종료 };
+  const a = sumRange(cur), b = sumRange(base);
+  const host = $('promokpis'); host.replaceChildren();
+  [['일평균 ' + mname(), a.days ? a[f] / a.days : null, b.days ? b[f] / b.days : null, won],
+   ['일평균 결제건수', a.days ? a.n / a.days : null, b.days ? b.n / b.days : null, (v) => d3.format(',.1f')(v) + '건'],
+   ['객단가', a.n ? a[f] / a.n : null, b.n ? b[f] / b.n : null, won],
+   ['행사 기간 ' + mname(), a[f], null, won]].forEach(([l, v, bv, fm]) => {
+    const k = el('div', 'kpi'); k.append(el('div', 'l', l), el('div', 'v', v == null ? '—' : fm(v)));
+    const ft = el('div', 'f');
+    if (bv != null) { const c = ratio(v, bv); ft.append(tone(el('b', null, pct(c)), c), document.createTextNode(' · 평소 ' + fm(bv))); }
+    else ft.textContent = label(cur) + ' (' + a.days + '일)';
+    k.append(ft); host.append(k);
+  });
+  const ch = $('promochart'); ch.replaceChildren();
+  const m = groupRange({ a: base.a, b: add(pr.종료, 7) }, (r) => r.d);
+  const keys = []; for (let d = base.a; d <= add(pr.종료, 7) && d <= D.last; d = add(d, 1)) keys.push(d);
+  const data = keys.map((k) => ({ k, ...(m.get(k) || { s: 0, g: 0, n: 0 }) }));
+  if (!data.length) return;
+  const W = Math.max(300, ch.clientWidth), H = 240, mb = 26;
+  const svg = d3.select(ch).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', pr.이름 + ' 전후 일별 ' + mname());
+  const y = d3.scaleLinear().domain([0, d3.max(data, (d) => d[f]) || 1]).nice().range([H - mb, 14]);
+  const ml = axisSetup(svg, y, W, H, mb);
+  const x = d3.scaleBand().domain(keys).range([ml, W - 4]).padding(0.2);
+  const every = Math.max(1, Math.ceil(keys.length / Math.max(2, Math.floor((W - ml) / 50))));
+  const gx = svg.append('g').attr('transform', `translate(0,${H - mb})`).call(d3.axisBottom(x).tickValues(keys.filter((_, i) => i % every === 0)).tickSize(0).tickFormat(md));
+  gx.select('.domain').remove(); gx.selectAll('.tick text').attr('dy', 10);
+  const inP = (k) => k >= pr.시작 && k <= pr.종료;
+  svg.append('g').selectAll('rect').data(data).join('rect').attr('x', (d) => x(d.k)).attr('width', x.bandwidth()).attr('y', (d) => y(Math.max(0, d[f]))).attr('height', (d) => Math.abs(y(0) - y(d[f]))).attr('rx', 2)
+    .style('fill', (d) => (inP(d.k) ? 'var(--accent)' : 'var(--faint)')).style('opacity', (d) => (inP(d.k) ? 0.9 : 0.5));
+  if (b.days) { const yy = y(b[f] / b.days);
+    svg.append('line').attr('x1', ml).attr('x2', W - 4).attr('y1', yy).attr('y2', yy).style('stroke', 'var(--muted)').style('stroke-dasharray', '4 3');
+    svg.append('text').attr('x', ml + 4).attr('y', yy - 5).style('font-size', '11px').style('fill', 'var(--muted)').style('paint-order', 'stroke').style('stroke', 'var(--panel)').style('stroke-width', 4).text('평소 일평균'); }
+  const t = tipOf(ch);
+  svg.append('g').selectAll('rect').data(data).join('rect').attr('x', (d) => x(d.k) - (x.step() - x.bandwidth()) / 2).attr('width', x.step()).attr('y', 0).attr('height', H - mb).style('fill', 'transparent')
+    .on('pointerenter', (ev, d) => { const s = ch.clientWidth / W; t.show([[null, d.k + (inP(d.k) ? ' · 행사' : '')], [mname(), int(d[f]) + '원'], ['결제건수', int(d.n) + '건']], (x(d.k) + x.bandwidth() / 2) * s, y(Math.max(0, d[f])) * s); })
+    .on('pointerleave', () => t.hide());
+  const cm = groupRange(cur, (r) => r.c), bm = groupRange(base, (r) => r.c);
+  const rows = Array.from(new Set([...cm.keys(), ...bm.keys()])).map((c) => { const x1 = cm.get(c) || { s: 0, g: 0 }, x0 = bm.get(c) || { s: 0, g: 0 }; return { c, a: x1[f], b: x0[f], chg: ratio(x1[f], x0[f]) }; }).sort((p, q) => q.a - p.a);
+  const th = $('promocat'); th.replaceChildren();
+  const tbl = el('table'), hr = tbl.createTHead().insertRow(); ['카테고리', '평소 (' + label(base) + ')', '행사 (' + label(cur) + ')', '증감'].forEach((h) => hr.append(el('th', null, h)));
+  const tb = tbl.createTBody();
+  rows.forEach((r) => { const tr = tb.insertRow(); const c0 = tr.insertCell(); const dot = el('span', 'dot'); dot.style.background = catColor(r.c); c0.append(dot, document.createTextNode(r.c));
+    tr.insertCell().textContent = won(r.b); tr.insertCell().textContent = won(r.a); const cc = tr.insertCell(); cc.textContent = pct(r.chg); tone(cc, r.chg); });
+  th.append(tbl);
+}
+
+/* ---------- 조건 패널 ---------- */
+function syncControls() {
+  document.querySelectorAll('[data-grain]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.grain === S.grain)));
+  document.querySelectorAll('[data-metric]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.metric === S.metric)));
+  document.querySelectorAll('[data-cmp]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.cmp === S.cmp)));
+  document.querySelectorAll('[data-preset]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.preset === S.preset)));
+  $('month').value = /^\d{4}-\d{2}$/.test(S.preset) ? S.preset : '';
+  ['from', 'to', 'cfrom', 'cto'].forEach((id) => { const e = $(id); e.min = D.first; e.max = D.last; if (document.activeElement !== e) e.value = S[id] || ''; });
+  $('cmpdates').hidden = S.cmp !== 'custom';
+  const cats = $('cats'); cats.replaceChildren();
+  const all = el('button', 'chip', '전체'); all.type = 'button'; all.setAttribute('aria-pressed', String(!S.cats.size));
+  all.onclick = () => { S.cats.clear(); S.drill = null; syncHash(); render(); }; cats.append(all);
+  D.cats.forEach((c) => { const b = el('button', 'chip'); b.type = 'button'; b.setAttribute('aria-pressed', String(S.cats.has(c)));
+    const dot = el('span', 'dot'); dot.style.background = catColor(c); b.append(dot, document.createTextNode(c));
+    b.onclick = () => { if (S.cats.has(c)) S.cats.delete(c); else S.cats.add(c); S.drill = null; syncHash(); render(); }; cats.append(b); });
+  $('catcount').textContent = S.cats.size ? '(' + S.cats.size + '개 선택)' : '';
+  const rg = range(), cg = cmpRange();
+  const sm = $('summary'); sm.replaceChildren();
+  sm.append(el('b', null, label(rg)), document.createTextNode(' · ' + days(rg.a, rg.b) + '일'), el('br'),
+    document.createTextNode('비교 ' + label(cg)), el('br'), document.createTextNode((S.cats.size ? Array.from(S.cats).join(', ') : '전체 카테고리') + ' · ' + S.grain + ' 단위 · ' + mname()));
+  $('mtsum').textContent = label(rg);
+  const db = $('drillbox'); db.replaceChildren();
+  if (S.drill) { const d = el('div', 'drill'); d.append(document.createTextNode(bucketTitle(S.drill.k) + '만 보는 중')); const x = el('button', null, '해제'); x.type = 'button'; x.onclick = () => { S.drill = null; render(); }; d.append(x); db.append(d); }
+}
+function render() {
+  if (!D) return;
+  syncControls();
+  document.querySelectorAll('.view').forEach((v) => { v.hidden = v.dataset.view !== S.view; });
+  document.querySelectorAll('#nav a').forEach((a) => { if (a.dataset.view === S.view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  $('title').textContent = { overview: '매출 현황', category: '카테고리', product: '상품 조회', promo: '프로모션' }[S.view];
+  if (S.view === 'overview') drawOverview();
+  else if (S.view === 'category') drawCategory();
+  else if (S.view === 'product') drawProduct();
+  else drawPromo();
+}
+
+/* ---------- 주소(#)에 조건 저장 ---------- */
+function syncHash() {
+  const p = new URLSearchParams();
+  p.set('from', S.from); p.set('to', S.to); p.set('g', S.grain); p.set('m', S.metric); p.set('cmp', S.cmp);
+  if (S.cmp === 'custom' && S.cfrom) { p.set('cf', S.cfrom); p.set('ct', S.cto); }
+  if (S.cats.size) p.set('cat', Array.from(S.cats).join('|'));
+  if (S.product) p.set('p', S.product);
+  if (S.preset) p.set('pre', S.preset);
+  history.replaceState(null, '', '#' + S.view + '?' + p.toString());
+}
+function readHash() {
+  const h = location.hash.slice(1); if (!h) return false;
+  const [v, qs] = h.split('?'); if (['overview', 'category', 'product', 'promo'].includes(v)) S.view = v;
+  if (!qs) return false;
+  const p = new URLSearchParams(qs), okd = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s || '');
+  if (okd(p.get('from')) && okd(p.get('to'))) { S.from = p.get('from'); S.to = p.get('to'); }
+  if (['월', '주', '일'].includes(p.get('g'))) S.grain = p.get('g');
+  if (['순', '총'].includes(p.get('m'))) S.metric = p.get('m');
+  if (['prev', 'custom', 'none'].includes(p.get('cmp'))) S.cmp = p.get('cmp');
+  if (okd(p.get('cf')) && okd(p.get('ct'))) { S.cfrom = p.get('cf'); S.cto = p.get('ct'); }
+  if (p.get('cat')) S.cats = new Set(p.get('cat').split('|').filter((c) => D.cats.includes(c)));
+  if (p.get('p')) S.product = p.get('p');
+  S.preset = p.get('pre') || '';
+  return okd(p.get('from'));
+}
+
+/* ---------- 이벤트 ---------- */
+document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => { applyPreset(b.dataset.preset); syncHash(); render(); }));
+document.querySelectorAll('[data-grain]').forEach((b) => b.addEventListener('click', () => { S.grain = b.dataset.grain; S.drill = null; syncHash(); render(); }));
+document.querySelectorAll('[data-metric]').forEach((b) => b.addEventListener('click', () => { S.metric = b.dataset.metric; syncHash(); render(); }));
+document.querySelectorAll('[data-cmp]').forEach((b) => b.addEventListener('click', () => {
+  S.cmp = b.dataset.cmp;
+  if (S.cmp === 'custom' && !S.cfrom) { const r = cmpRangeDefault(); S.cfrom = r.a; S.cto = r.b; }
+  syncHash(); render();
+}));
+function cmpRangeDefault() { const { a, b } = range(); const n = days(a, b); return { a: add(a, -n), b: add(a, -1) }; }
+$('month').addEventListener('change', (e) => { if (e.target.value) { applyPreset(e.target.value); syncHash(); render(); } });
+const dateOk = (e) => e.value && e.validity.valid;
+['from', 'to'].forEach((id) => $(id).addEventListener('change', (e) => {
+  if (!dateOk(e.target)) return;
+  S[id] = e.target.value; S.preset = ''; S.drill = null;
+  if (S.from > S.to) { if (id === 'from') S.to = S.from; else S.from = S.to; }
+  syncHash(); render();
+}));
+['cfrom', 'cto'].forEach((id) => $(id).addEventListener('change', (e) => {
+  if (!dateOk(e.target)) return;
+  S[id] = e.target.value; if (S.cfrom && S.cto && S.cfrom > S.cto) { if (id === 'cfrom') S.cto = S.cfrom; else S.cfrom = S.cto; }
+  syncHash(); render();
+}));
+document.querySelectorAll('#nav a').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); S.view = a.dataset.view; S.drill = null; syncHash(); render(); window.scrollTo(0, 0); }));
+let qt; $('q').addEventListener('input', (e) => { clearTimeout(qt); qt = setTimeout(() => { S.q = e.target.value; drawProduct(); }, 150); });
+$('pclose').addEventListener('click', () => { S.product = null; syncHash(); drawProduct(); });
+$('promosel').addEventListener('change', (e) => { S.promo = +e.target.value; drawPromo(); });
+$('promoapply').addEventListener('click', () => { const p = PROMOS[S.promo]; if (!p) return; S.from = p.시작; S.to = p.종료 > D.last ? D.last : p.종료; S.preset = ''; S.grain = '일'; S.cmp = 'prev'; S.drill = null; S.view = 'overview'; syncHash(); render(); window.scrollTo(0, 0); });
+$('mtoggle').addEventListener('click', () => { const fb = $('fbody'); fb.hidden = !fb.hidden; $('mtoggle').setAttribute('aria-expanded', String(!fb.hidden)); });
+window.addEventListener('hashchange', () => { if (D) { readHash(); render(); } });
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 150); });
+
+/* ---------- 시작 ---------- */
+function showStatus(msg) { const s = $('status'); s.hidden = false; s.textContent = msg; }
+async function load() {
+  if (!CSV_URL) { showStatus("config.js 파일의 window.CSV_URL 에 구글 시트 '웹에 게시' CSV 주소를 넣어 주세요."); return; }
+  try {
+    const res = await fetch(CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('시트를 읽지 못했어요 (HTTP ' + res.status + '). 웹에 게시가 켜져 있는지 확인해 주세요.');
+    const text = await res.text();
+    if (/^\s*</.test(text)) throw new Error('CSV가 아닌 웹페이지가 돌아왔어요. 게시 형식이 CSV인지 확인해 주세요.');
+    D = parse(text);
+    $('asof').textContent = D.last; $('first').textContent = D.first;
+    $('fetched').textContent = new Date().toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const months = []; for (let m = monthStart(D.first); m <= D.last; m = addMonths(m, 1)) months.push(m.slice(0, 7));
+    const ms = $('month'); ms.replaceChildren(new Option('월 선택', '')); months.reverse().forEach((m) => ms.append(new Option(m.slice(0, 4) + '년 ' + (+m.slice(5)) + '월', m)));
+    const ps = $('promosel'); ps.replaceChildren(); PROMOS.forEach((p, i) => ps.append(new Option(p.이름 + ' (' + md(p.시작) + '–' + md(p.종료) + ')', i)));
+    if (!readHash()) applyPreset('28');
+    if (S.to > D.last) S.to = D.last; if (S.from < D.first) S.from = D.first;
+    $('app').classList.remove('loading');
+    syncHash(); render();
+  } catch (e) {
+    showStatus(e.message);
+  }
+}
+load();
+</script>
+</body>
+</html>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
 <title>브랜든 매출 대시보드</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
