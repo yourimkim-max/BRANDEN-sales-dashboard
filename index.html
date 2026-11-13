@@ -112,10 +112,10 @@ input[type="date"] { width: 100%; padding: 8px 10px; }
 .ch h2 { font-family: var(--font-display); font-size: 28px; margin: 0; font-weight: 600; letter-spacing: -0.02em; }
 .ch .hint { font-size: 13px; color: var(--faint); }
 .ch .right { margin-left: auto; }
-.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0; background: var(--tile); color: var(--on-tile); border-radius: 18px; padding: 16px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0; background: var(--tile); color: var(--on-tile); border-radius: 18px; padding: 16px; }
 .kpi { background: transparent; border: 0; border-radius: 0; padding: 20px 22px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .kpi .l { font-size: 14px; color: var(--tile-muted); }
-.kpi .v { font-family: var(--font-display); white-space: nowrap; font-size: clamp(24px, 2.3vw, 40px); font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.025em; line-height: 1.15; }
+.kpi .v { font-family: var(--font-display); white-space: nowrap; font-size: clamp(20px, 1.7vw, 30px); font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.025em; line-height: 1.15; }
 .kpi .f { font-size: 13px; color: var(--tile-muted); font-variant-numeric: tabular-nums; }
 .kpi .good { color: var(--tile-ok); } .kpi .bad { color: var(--tile-bad); }
 .good { color: var(--ok); } .bad { color: var(--bad); }
@@ -195,7 +195,7 @@ td.name .s { margin-top: 2px; }
   .ch h2 { font-size: 22px; }
   .kpis { padding: 8px; }
   .kpi { padding: 14px; }
-  .kpi .v { font-size: 28px; }
+  .kpi .v { font-size: 22px; }
 }
 /* 조회 조건: 상단 툴바 + 팝오버 */
 .toolbar { position: sticky; top: 0; z-index: 15; background: var(--frost); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--line); padding: 12px 56px; }
@@ -401,12 +401,12 @@ td.name .s { margin-top: 2px; }
           <div class="ch"><h2 id="adtype-title">유형별 실적</h2></div>
           <div class="scroll" id="adtype"></div>
         </div>
-        <div class="card">
+        <div class="card" id="adcamp-card">
           <div class="ch"><h2>캠페인별 실적</h2><span class="hint" id="adcamphint">열 제목 클릭 = 정렬</span><span class="right"><input type="search" id="adq" placeholder="캠페인 검색" aria-label="캠페인 검색"></span></div>
           <div class="scroll" id="adcamp"></div>
         </div>
         <div id="adgroup-card" class="agwrap" hidden>
-          <div class="ch aghead"><h2>광고그룹별 실적</h2><span class="hint">쇼핑검색 · 파워링크 · 브랜드형으로 나눠 보여줘요 · 열 제목 클릭 = 정렬</span><span class="right"><input type="search" id="agq" placeholder="광고그룹 검색" aria-label="광고그룹 검색"></span></div>
+          <div class="ch aghead"><h2 id="agtitle">광고그룹별 실적</h2><span class="hint" id="aghint">쇼핑검색 · 파워링크 · 브랜드형으로 나눠 보여줘요 · 열 제목 클릭 = 정렬</span><span class="right"><input type="search" id="agq" placeholder="광고그룹 검색" aria-label="광고그룹 검색"></span></div>
           <div class="agwrap" id="adgroups"></div>
         </div>
       </div>
@@ -442,14 +442,8 @@ const wk = (s) => { const d = P(s); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay(
 const bucket = (s) => (S.grain === '월' ? s.slice(0, 7) : S.grain === '주' ? wk(s) : s);
 const md = (s) => (+s.slice(5, 7)) + '/' + (+s.slice(8, 10));
 const int = d3.format(',.0f');
-const won = (n) => {
-  if (n == null || !isFinite(n)) return '—';
-  const a = Math.abs(n);
-  if (a >= 1e8) return d3.format(',.2f')(n / 1e8) + '억';
-  if (a >= 1e7) return d3.format(',.0f')(n / 1e4) + '만';
-  return int(n);
-};
-const shortAxis = (n) => { const a = Math.abs(n); if (a >= 1e8) return d3.format(',.1f')(n / 1e8).replace(/\.0$/, '') + '억'; if (a >= 1e4) return d3.format(',.0f')(n / 1e4) + '만'; return int(n); };
+const won = (n) => (n == null || !isFinite(n) ? '—' : int(n) + '원');
+const shortAxis = (n) => int(n);
 const ratio = (x, y) => (x == null || !y ? null : (x / y - 1) * 100);
 const pct = (v) => (v == null || !isFinite(v) ? '—' : (v > 0 ? '▲' : v < 0 ? '▼' : '') + d3.format('.1f')(Math.abs(v)) + '%');
 const tone = (e, v) => { e.classList.toggle('good', v != null && v > 0); e.classList.toggle('bad', v != null && v < 0); return e; };
@@ -556,7 +550,7 @@ function kpiCards(host, cur, prev, extra) {
   const f = F();
   host.replaceChildren();
   const items = [
-    [mname(), won(cur[f]), int(cur[f]) + '원', prev ? ratio(cur[f], prev[f]) : null],
+    [mname(), won(cur[f]), '', prev ? ratio(cur[f], prev[f]) : null],
     ['일평균 ' + mname(), won(cur.days ? cur[f] / cur.days : null), cur.days + '일', prev ? ratio(cur.days ? cur[f] / cur.days : null, prev.days ? prev[f] / prev.days : null) : null],
     ['결제건수', int(cur.n) + '건', '', prev ? ratio(cur.n, prev.n) : null],
     ['객단가', won(cur.n ? cur[f] / cur.n : null), mname() + ' ÷ 결제건수', prev ? ratio(cur.n ? cur[f] / cur.n : null, prev.n ? prev[f] / prev.n : null) : null],
@@ -632,7 +626,7 @@ function drawBars(rg, cg) {
     .attr('x', (d) => x(d.k)).attr('width', x.bandwidth()).attr('y', (d) => y(Math.max(0, d[f]))).attr('height', (d) => Math.abs(y(0) - y(d[f]))).attr('rx', 2)
     .style('fill', 'var(--accent)').style('opacity', (d) => (selK && d.k !== selK ? 0.25 : 0.9));
   if (data.length <= 16) svg.append('g').selectAll('text').data(data).join('text').attr('x', (d) => x(d.k) + x.bandwidth() / 2).attr('y', (d) => y(Math.max(0, d[f])) - 5)
-    .attr('text-anchor', 'middle').style('font-size', '10.5px').style('fill', 'var(--muted)').text((d) => won(d[f]));
+    .attr('text-anchor', 'middle').style('font-size', '10.5px').style('fill', 'var(--muted)').text((d) => int(d[f]));
   if (cdata) {
     const pts = data.map((d, i) => (cdata[i] ? { x: x(d.k) + x.bandwidth() / 2, v: cdata[i][f], k: cdata[i].k } : null)).filter(Boolean);
     svg.append('path').datum(pts).attr('d', d3.line().x((p) => p.x).y((p) => y(p.v))).style('fill', 'none').style('stroke', 'var(--muted)').style('stroke-dasharray', '4 3').style('stroke-width', 1.5);
@@ -940,7 +934,7 @@ function drawAds() {
   // KPI
   const k = $('adkpis');
   const items = [
-    ['광고비', won(a.cost), int(a.cost) + '원', b ? ratio(a.cost, b.cost) : null, 0, 'r'],
+    ['광고비', won(a.cost), '', b ? ratio(a.cost, b.cost) : null, 0, 'r'],
     ['전환매출', won(a.rev), '', b ? ratio(a.rev, b.rev) : null, 1, 'r'],
     ['ROAS', pctf(roasOf(a), 0), '전환매출 ÷ 광고비', b && roasOf(b) != null && roasOf(a) != null ? roasOf(a) - roasOf(b) : null, 1, 'p'],
     ['광고비 비중', share == null ? '—' : pctf(share, 1), '광고비 ÷ 스토어 ' + mname(), share != null && shareP != null ? share - shareP : null, -1, 'p'],
@@ -1004,7 +998,9 @@ function drawAds() {
   // 유형별
   $('adtype-title').textContent = media ? (media === '검색광고' ? '캠페인 유형별 실적' : media === 'GFA' ? '캠페인 목적별 실적' : '타겟별 실적') : '매체·유형별 실적';
   const tc = adAgg(rg, (r) => r.md + '|' + (r.t || '기타'), pred), tp = adAgg(cg, (r) => r.md + '|' + (r.t || '기타'), pred);
-  const trows = Array.from(tc, ([kk, v]) => { const [md, ty] = kk.split('|'); return adRow(ty, v, tp.get(kk), { sub: media ? '' : md, color: MCOLOR[md], share: a.cost ? v.cost / a.cost * 100 : null }); }).sort((p, q) => q.cost - p.cost);
+  const trows = Array.from(tc, ([kk, v]) => { const [md, ty] = kk.split('|'); return adRow(ty, v, tp.get(kk), { sub: media ? '' : md, color: MCOLOR[md], share: a.cost ? v.cost / a.cost * 100 : null }); });
+  const tsum = new Map(); trows.forEach((r) => tsum.set(r.name, (tsum.get(r.name) || 0) + r.cost));
+  trows.sort((p, q) => (p.name === q.name ? q.cost - p.cost : (tsum.get(q.name) - tsum.get(p.name)) || p.name.localeCompare(q.name, 'ko')));
   adTable($('adtype'), trows, [Object.assign({}, AC.name, { h: '유형' }), AC.cost, AC.share, AC.clk, AC.ctr, AC.cpc, AC.conv, AC.rev, AC.roas, AC.droas], false);
   // 캠페인별
   const cc = adAgg(rg, (r) => r.md + '|' + r.cp, pred), cpv = adAgg(cg, (r) => r.md + '|' + r.cp, pred), meta = new Map();
@@ -1021,9 +1017,15 @@ function drawAds() {
   const scls = (r) => (/브랜드형/.test(r.cp || '') ? '브랜드형' : r.t || '기타');
   adTable($('adcamp'), crows.slice(0, 150), ccols, true, isSA ? (r) => { const c = document.getElementById('ag-' + scls(r)); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } : null);
   // 광고그룹별 (검색광고) — 쇼핑검색 / 파워링크 / 브랜드형
-  $('adgroup-card').hidden = !isSA;
-  if (!isSA) return;
-  const SEP = '\u0001', gpred = (r) => pred(r) && r.ag, gkey = (r) => scls(r) + SEP + r.cp + SEP + r.ag;
+  const isGFA = media === 'GFA';
+  $('adcamp-card').hidden = isGFA;
+  $('adgroup-card').hidden = !isSA && !isGFA;
+  if (!isSA && !isGFA) return;
+  $('agtitle').textContent = isSA ? '광고그룹별 실적' : '캠페인별 실적';
+  $('aghint').textContent = (isSA ? '쇼핑검색 · 파워링크 · 브랜드형으로' : '캠페인 목적별로') + ' 나눠 보여줘요 · 열 제목 클릭 = 정렬';
+  $('agq').placeholder = isSA ? '광고그룹 검색' : '캠페인 검색'; $('agq').setAttribute('aria-label', $('agq').placeholder);
+  const gcls = isSA ? scls : (r) => r.t || '기타', unit = isSA ? (r) => r.ag : (r) => r.cp, uname = isSA ? '광고그룹' : '캠페인';
+  const SEP = '\u0001', gpred = (r) => pred(r) && unit(r), gkey = (r) => gcls(r) + SEP + r.cp + SEP + unit(r);
   const gc = adAgg(rg, gkey, gpred), gp = adAgg(cg, gkey, gpred);
   const gq = S.gq.trim().toLowerCase(), gk = S.gsort, gd = S.gsdir, by = new Map();
   const addT = (t, v) => { t.cost += v.cost; t.imp += v.imp; t.clk += v.clk; t.conv += v.conv; t.rev += v.rev; };
@@ -1033,17 +1035,17 @@ function drawAds() {
     g.items.push({ cp, ag, v, p: gp.get(kk) }); g.cps.add(cp); addT(g.tot, v);
   }
   for (const [kk, v] of gp) { const g = by.get(kk.split(SEP)[0]); if (g) addT(g.prev, v); }
-  const order = SCLS.filter((c) => by.has(c)).concat(Array.from(by.keys()).filter((c) => !SCLS.includes(c)).sort());
+  const order = isSA ? SCLS.filter((c) => by.has(c)).concat(Array.from(by.keys()).filter((c) => !SCLS.includes(c)).sort()) : Array.from(by.keys()).sort((p, q) => by.get(q).tot.cost - by.get(p).tot.cost);
   const ghost = $('adgroups');
-  if (!order.length) { ghost.append(el('div', 'empty', '이 기간에는 광고그룹 데이터가 없어요')); return; }
-  const gcols = [Object.assign({}, AC.name, { h: '광고그룹' })].concat(ccols.slice(1));
+  if (!order.length) { ghost.append(el('div', 'empty', '이 기간에는 ' + uname + ' 데이터가 없어요')); return; }
+  const gcols = [Object.assign({}, AC.name, { h: uname })].concat(ccols.slice(1));
   order.forEach((c) => {
-    const g = by.get(c), multi = g.cps.size > 1;
+    const g = by.get(c), multi = isSA && g.cps.size > 1;
     let rows = g.items.map((it) => adRow(it.ag, it.v, it.p, { sub: multi ? it.cp : '', color: MCOLOR[media] }));
     if (gq) rows = rows.filter((r) => (r.name + ' ' + r.sub).toLowerCase().includes(gq));
     rows.sort((p, q2) => (gk === 'name' ? p.name.localeCompare(q2.name, 'ko') * -gd : ((p[gk] ?? -Infinity) - (q2[gk] ?? -Infinity)) * gd));
     const card = el('div', 'card agcard'); card.id = 'ag-' + c;
-    const ch = el('div', 'ch'); ch.append(el('h2', null, c), el('span', 'hint', '광고그룹 ' + g.items.length + '개 · 광고비 ' + won(g.tot.cost) + ' · ROAS ' + pctf(roasOf(g.tot), 0)));
+    const ch = el('div', 'ch'); ch.append(el('h2', null, c), el('span', 'hint', uname + ' ' + g.items.length + '개 · 광고비 ' + won(g.tot.cost) + ' · ROAS ' + pctf(roasOf(g.tot), 0)));
     const sc = el('div', 'scroll'); card.append(ch, sc); ghost.append(card);
     if (!rows.length) { sc.append(el('div', 'empty', '검색 결과가 없어요')); return; }
     adTable(sc, [adRow('합계', g.tot, cg ? g.prev : null, { total: true })].concat(rows.slice(0, 200)), gcols, 'g');
