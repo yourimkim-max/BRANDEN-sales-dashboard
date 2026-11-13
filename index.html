@@ -1046,10 +1046,12 @@ function drawAds() {
   const lg = $('adlegend');
   meds.forEach((md) => { const s = el('span'); s.style.display = 'inline-flex'; s.style.alignItems = 'center'; s.style.gap = '6px'; const i = el('i'); i.style.background = MCOLOR[md]; s.append(i, document.createTextNode(md + ' 광고비')); lg.append(s); });
   const ls = el('span'); ls.style.display = 'inline-flex'; ls.style.alignItems = 'center'; ls.style.gap = '6px'; const li = el('i'); li.style.background = 'var(--fg)'; ls.append(li, document.createTextNode('ROAS')); lg.append(ls);
+  const ss = el('span'); ss.style.display = 'inline-flex'; ss.style.alignItems = 'center'; ss.style.gap = '6px'; const si = el('i'); si.style.background = 'var(--muted)'; si.style.opacity = '.5'; ss.append(si, document.createTextNode('스토어 ' + mname() + ' (흐린 선, 값은 막대에 마우스)')); lg.append(ss);
   const host = $('adbars');
   const bm = adAgg(rg, (r) => bucket(r.d) + '|' + r.md, pred), tm = adAgg(rg, (r) => bucket(r.d), pred);
   const keys = []; for (let d = rg.a; d <= (rg.b > D.last ? D.last : rg.b); d = add(d, 1)) { const kk = bucket(d); if (keys[keys.length - 1] !== kk) keys.push(kk); }
-  const data = keys.map((kk) => { let acc = 0; const parts = meds.map((md) => { const v = (bm.get(kk + '|' + md) || AD0()).cost; const p = { md, y0: acc, y1: acc + v, v }; acc += v; return p; }); return { k: kk, parts, t: tm.get(kk) || AD0() }; });
+  const svC = S.cats; S.cats = new Set(); const sm = groupRange(rg, (r) => bucket(r.d)); S.cats = svC;
+  const data = keys.map((kk) => { let acc = 0; const parts = meds.map((md) => { const v = (bm.get(kk + '|' + md) || AD0()).cost; const p = { md, y0: acc, y1: acc + v, v }; acc += v; return p; }); return { k: kk, parts, t: tm.get(kk) || AD0(), sale: (sm.get(kk) || {})[f] || 0 }; });
   if (data.length) {
     const W = Math.max(300, host.clientWidth), H = 280, mb = 26, mr = 52;
     const svg = d3.select(host).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', S.grain + '별 광고비 누적 막대와 ROAS 선 그래프');
@@ -1066,6 +1068,8 @@ function drawAds() {
     const gx = svg.append('g').attr('transform', `translate(0,${H - mb})`).call(d3.axisBottom(x).tickValues(keys.filter((_, i) => i % every === 0)).tickSize(0).tickFormat(bucketLabel));
     gx.select('.domain').remove(); gx.selectAll('.tick text').attr('dy', 10);
     data.forEach((d) => d.parts.forEach((p) => { if (p.v > 0) svg.append('rect').attr('x', x(d.k)).attr('width', x.bandwidth()).attr('y', y(p.y1)).attr('height', Math.max(0, y(p.y0) - y(p.y1))).style('fill', MCOLOR[p.md]).style('opacity', 0.85); }));
+    const y3 = d3.scaleLinear().domain([0, d3.max(data, (d) => d.sale) || 1]).nice().range([H - mb, 16]);
+    svg.append('path').datum(data).attr('d', d3.line().curve(d3.curveMonotoneX).x((d) => x(d.k) + x.bandwidth() / 2).y((d) => y3(d.sale))).style('fill', 'none').style('stroke', 'var(--muted)').style('stroke-width', 2.5).style('stroke-linecap', 'round').style('opacity', 0.45);
     const pts = data.filter((d) => roasOf(d.t) != null).map((d) => ({ x: x(d.k) + x.bandwidth() / 2, v: roasOf(d.t) }));
     svg.append('path').datum(pts).attr('d', d3.line().x((p) => p.x).y((p) => y2(p.v))).style('fill', 'none').style('stroke', 'var(--fg)').style('stroke-width', 1.8);
     if (pts.length <= 40) svg.append('g').selectAll('circle').data(pts).join('circle').attr('cx', (p) => p.x).attr('cy', (p) => y2(p.v)).attr('r', 3).style('fill', 'var(--panel)').style('stroke', 'var(--fg)').style('stroke-width', 1.5);
@@ -1073,7 +1077,7 @@ function drawAds() {
     svg.append('g').selectAll('rect').data(data).join('rect').attr('x', (d) => x(d.k) - (x.step() - x.bandwidth()) / 2).attr('width', x.step()).attr('y', 0).attr('height', H - mb).style('fill', 'transparent')
       .on('pointerenter', (ev, d) => {
         const s = host.clientWidth / W, lines = [[null, bucketTitle(d.k)]].concat(d.parts.slice().reverse().map((p) => [p.md, int(p.v) + '원', MCOLOR[p.md]]));
-        lines.push(['광고비 합계', int(d.t.cost) + '원'], ['전환매출', int(d.t.rev) + '원'], ['ROAS', pctf(roasOf(d.t), 0)]);
+        lines.push(['광고비 합계', int(d.t.cost) + '원'], ['전환매출', int(d.t.rev) + '원'], ['ROAS', pctf(roasOf(d.t), 0)], ['스토어 ' + mname(), int(d.sale) + '원'], ['광고비 비중', d.sale ? pctf(d.t.cost / d.sale * 100, 1) : '—']);
         t.show(lines, (x(d.k) + x.bandwidth() / 2) * s, y(d.t.cost) * s);
       })
       .on('pointerleave', () => t.hide());
