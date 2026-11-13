@@ -228,6 +228,75 @@ td.name .s { margin-top: 2px; }
   .tbtn { padding: 0 12px; }
   .tright { margin-left: 0; }
 }
+/* ---------- 미니룸 ---------- */
+.mr { border: 3px solid #a9c3e8; border-radius: 22px; background: var(--panel); padding: 14px; box-shadow: 0 0 0 6px rgba(169, 195, 232, .25); }
+.mr-top { display: flex; align-items: center; gap: 12px; padding: 2px 6px 12px; }
+.mr-count { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--muted); }
+.mr-count b { color: #ff6b4a; font-weight: 700; }
+.mr-tabs { margin-left: auto; display: flex; gap: 4px; }
+.mr-count, .mr-tabs button { white-space: nowrap; }
+.mr-tabs button { border: 1px solid #a9c3e8; background: transparent; color: var(--muted); border-radius: 8px 8px 0 0; padding: 5px 12px; font-size: 12.5px; cursor: pointer; }
+.mr-tabs button[aria-pressed="true"] { background: #a9c3e8; color: #1d2b44; font-weight: 600; }
+.mr-body { display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 14px; }
+.mr-side, .mr-main { border: 1px dashed var(--line2); border-radius: 14px; padding: 14px; min-width: 0; }
+.mr-side { display: flex; flex-direction: column; gap: 12px; font-size: 13px; align-self: start; }
+.mr-ava { background: linear-gradient(#eef3fb, #dde7f6); border-radius: 12px; display: grid; place-items: center; padding: 12px 0; }
+.mr-ava svg { width: 132px; height: 99px; }
+.mr-name { text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+.mr-desc { text-align: center; color: var(--muted); font-size: 12px; margin-top: -8px; }
+.mr-hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
+.mr-mood b { color: #2fb36b; margin-left: 6px; }
+.mr-mood b.low { color: #ff9f0a; }
+.mr-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+.mr-legend span { display: flex; align-items: center; gap: 6px; }
+.mr-legend b { margin-left: auto; font-variant-numeric: tabular-nums; }
+.mr-sq { width: 8px; height: 8px; flex: none; display: inline-block; }
+.mr-note { color: var(--faint); font-size: 12px; line-height: 1.6; }
+.mr-pick { background: var(--bg); border-radius: 12px; padding: 12px; line-height: 1.6; font-size: 12.5px; }
+.mr-pick h4 { margin: 0 0 4px; font-size: 14px; }
+.mr-pick dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 0; } .mr-pick dt { color: var(--faint); } .mr-pick dd { margin: 0; }
+.mr-head { font-size: 13px; color: var(--muted); margin-bottom: 10px; } .mr-head b { color: var(--fg); font-size: 14px; margin-right: 6px; }
+.mr-rooms { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; grid-auto-flow: dense; }
+.room { --w1: #fbe3cf; --w2: #f7d6ba; --f1: #f6dcc5; --f2: #f1cfb2; --bd: #e2a679; --hd: #f8d6b8; border: 2px solid var(--bd); border-radius: 10px; overflow: hidden; background: var(--f1); color: #2b2b2b; display: flex; flex-direction: column; }
+.room.wide { grid-column: span 2; }
+.room-h { background: var(--hd); padding: 6px 10px; font-size: 12.5px; font-weight: 700; color: #3a3a3a; border-bottom: 2px solid var(--bd); }
+.room-h span { font-weight: 400; color: #6e6e73; margin-left: 6px; font-size: 11.5px; }
+.scene { position: relative; flex: 1; min-height: 230px; padding: 54px 12px 40px;
+  background:
+    repeating-linear-gradient(90deg, var(--w1) 0 7px, var(--w2) 7px 14px) top / 100% 64px no-repeat,
+    conic-gradient(from 45deg, var(--f1) 25%, var(--f2) 0 50%, var(--f1) 0 75%, var(--f2) 0) 0 0 / 22px 22px; }
+.scene::before { content: ""; position: absolute; left: 0; right: 0; top: 64px; height: 3px; background: var(--bd); opacity: .55; }
+.win { position: absolute; right: 12px; top: 8px; width: 46px; height: 30px; background: #f4f8ff; border: 3px solid #fff; outline: 2px solid var(--bd); display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; }
+.win i { background: #b9d4f3; }
+.sign { position: absolute; left: 12px; top: 10px; width: 22px; height: 22px; background: #fff; border: 2px solid var(--bd); display: grid; place-items: center; font-size: 10px; font-weight: 800; color: var(--bd); }
+.bub { position: absolute; left: 42px; top: 10px; max-width: calc(100% - 120px); background: #fff; border: 1.5px solid #c9c9cf; border-radius: 12px; padding: 3px 9px; font-size: 11px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.plant { position: absolute; right: 10px; bottom: 8px; width: 22px; height: 30px; }
+.desks { position: relative; display: grid; grid-template-columns: repeat(auto-fill, 86px); gap: 4px 6px; }
+.emp { position: relative; display: flex; flex-direction: column; align-items: center; border: 0; background: none; padding: 0; cursor: pointer; color: inherit; font: inherit; }
+.emp:focus-visible { outline: 2px solid #0a84ff; outline-offset: 2px; border-radius: 8px; }
+.emp svg { width: 80px; height: 70px; shape-rendering: crispEdges; display: block; }
+.emp:hover svg { transform: translateY(-2px); }
+.tag { word-break: keep-all; display: inline-flex; align-items: flex-start; gap: 4px; max-width: 86px; background: #fff; border: 1.5px solid #c9c9cf; border-radius: 4px; padding: 2px 5px; font-size: 10.5px; line-height: 1.3; color: #333; text-align: center; margin-top: -2px; }
+.tag .mr-sq { margin-top: 3px; }
+.emp[aria-pressed="true"] .tag { border-color: #0a84ff; box-shadow: 0 0 0 2px rgba(10, 132, 255, .25); }
+.emo { position: absolute; top: -4px; left: 30px; font-size: 11px; font-weight: 800; pointer-events: none; }
+.emo.z { color: #6e6e73; animation: mrz 2.4s ease-in-out infinite; }
+.emo.ok { color: #0a84ff; } .emo.err { color: #ff3b30; animation: mrblink 1s steps(2) infinite; }
+.arm { animation: mrtype .5s steps(2) infinite; }
+.ln { animation: mrln 1.6s steps(4) infinite; }
+.steam { animation: mrz 2s ease-in-out infinite; }
+@keyframes mrtype { 50% { transform: translateY(1px); } }
+@keyframes mrln { 0% { opacity: .2; } 50% { opacity: 1; } }
+@keyframes mrz { 0% { transform: translateY(2px); opacity: .3; } 50% { opacity: 1; } 100% { transform: translateY(-4px); opacity: 0; } }
+@keyframes mrblink { 50% { opacity: .2; } }
+.gb { display: flex; flex-direction: column; gap: 12px; max-width: 720px; }
+.gb form { display: flex; gap: 8px; } .gb input { flex: 1; border-radius: 12px; padding: 10px 14px; border: 1px solid var(--line); background: var(--panel); }
+.gb button { border: 0; border-radius: 12px; padding: 0 16px; background: var(--accent); color: var(--accent-fg); font-weight: 600; cursor: pointer; }
+.gb ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.gb li { background: var(--bg); border-radius: 12px; padding: 10px 14px; font-size: 14px; } .gb li time { display: block; font-size: 11.5px; color: var(--faint); }
+@media (max-width: 1100px) { .mr-body { grid-template-columns: minmax(0, 1fr); } .mr-side { display: grid; grid-template-columns: 160px minmax(0, 1fr); align-items: start; } .mr-side > :not(.mr-ava) { grid-column: 2; } .mr-ava { grid-row: 1 / span 4; } }
+@media (max-width: 700px) { .room.wide { grid-column: auto; } .mr-side { display: flex; align-items: stretch; } .mr { padding: 10px; } .mr-top { flex-wrap: wrap; } .mr-rooms { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .arm, .ln, .emo, .steam { animation: none !important; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } button:active { transform: none; } }
 </style>
 </head>
@@ -248,6 +317,10 @@ td.name .s { margin-top: 2px; }
       <a href="#ads-sa" data-view="ads-sa"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="4" width="12" height="8" rx="4"/><circle cx="6" cy="8" r="1.5"/></svg><span>검색광고</span></a>
       <a href="#ads-gfa" data-view="ads-gfa"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 10l3.5-3 3 2.5L11 7l3 3"/></svg><span>GFA</span></a>
       <a href="#ads-meta" data-view="ads-meta"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 10.5c0-3 1.5-5 3-5 2.5 0 3.5 5 6 5 1.5 0 3-2 3-5"/></svg><span>Meta</span></a>
+    </div>
+    <div class="navh">오피스</div>
+    <div class="nav" id="nav3">
+      <a href="#room" data-view="room"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 7.5L8 3l6 4.5V14H2z"/><rect x="6.5" y="9.5" width="3" height="4.5"/></svg><span>미니룸</span></a>
     </div>
     <button type="button" class="themebtn" id="themebtn" aria-pressed="true"><span class="sw"></span><span class="tl">다크 모드</span></button>
   </nav>
@@ -410,6 +483,10 @@ td.name .s { margin-top: 2px; }
           <div class="agwrap" id="adgroups"></div>
         </div>
       </div>
+    </section>
+    <!-- 미니룸 -->
+    <section class="view" data-view="room" hidden>
+      <div id="roombox"></div>
     </section>
   </main>
 </div>
@@ -1052,6 +1129,128 @@ function drawAds() {
   });
 }
 
+/* ---------- 미니룸 (예시 직원 — 나중에 시트/예약 작업과 연결) ---------- */
+const MR_STATUS = {
+  work: { l: '일하는 중', c: '#2fb36b' }, idle: { l: '대기 중', c: '#b08a5a' }, err: { l: '쓰러짐', c: '#ff3b30' }, always: { l: '상시 근무', c: '#f5b800' },
+  done: { l: '오늘 완료', c: '#0a84ff' }, vac: { l: '휴가 중', c: '#a55eea' }, away: { l: '자리 비움', c: '#b8bcc6' }
+};
+const MR_ORDER = ['work', 'idle', 'err', 'always', 'done', 'vac', 'away'];
+const MR_TEAMS = [
+  { n: '매출팀', sign: '₩', shirt: '#e8743b', pal: ['#fbe3cf', '#f7d6ba', '#f6dcc5', '#f1cfb2', '#e2a679', '#f8d6b8'], msg: '어제 매출 집계 완료 · 결제 412건',
+    m: [['네이버 RAW 수집', 'done', '매일 09:00', '스마트스토어 주문 데이터를 시트로 옮겨요'], ['매출 집계', 'done', '매일 09:10', '날짜·카테고리·상품별로 묶어요'], ['카테고리 매핑', 'always', '상시', '새 상품을 카테고리에 연결해요'], ['환불 체크', 'work', '30분마다', '환불·취소 건을 순매출에 반영해요'], ['상품 마스터 정리', 'idle', '매주 월 10:00', '상품명·상품번호 목록을 정리해요']] },
+  { n: '광고팀', sign: 'AD', shirt: '#3b6fd8', pal: ['#dfe8f8', '#d2def4', '#dbe4f6', '#cfdaf1', '#93ade0', '#cfdcf3'], msg: '검색광고 리포트 받는 중…',
+    m: [['검색광고 리포트', 'work', '매일 08:30', '쇼핑검색·파워링크·브랜드형 실적을 받아요'], ['GFA 리포트', 'done', '매일 08:40', 'GFA 캠페인 실적을 받아요'], ['Meta 리포트', 'done', '매일 08:50', 'Meta 광고 실적을 받아요'], ['ROAS 점검', 'idle', '매일 11:00', 'ROAS가 크게 떨어진 캠페인을 찾아요'], ['광고비 알림', 'always', '상시', '하루 광고비가 한도를 넘으면 알려요'], ['광고그룹 정리', 'away', '매주 금', '성과 낮은 광고그룹을 추려요']] },
+  { n: '상품팀', sign: '▦', shirt: '#d6457a', pal: ['#f9dbe7', '#f4cddd', '#f6dbe6', '#f1cddb', '#e08bab', '#f5d0de'], msg: '재고 부족 3개 알림 보냄',
+    m: [['재고 체크', 'done', '매일 10:00', '품절 임박 상품을 찾아요'], ['가격 점검', 'work', '매일 14:00', '판매가·할인가가 맞는지 확인해요'], ['신상품 등록 도우미', 'idle', '요청 시', '상품 정보를 등록 양식으로 정리해요'], ['상세페이지 점검', 'vac', '—', '이번 주는 쉬어요']] },
+  { n: '고객팀', sign: '♥', shirt: '#2f9e6a', pal: ['#dcf1e4', '#cdebd9', '#d8eee0', '#cbe8d6', '#86c9a2', '#cdebd9'], msg: '오늘 리뷰 28건 정리',
+    m: [['리뷰 수집', 'done', '매일 18:00', '새 리뷰를 모아요'], ['리뷰 요약', 'work', '매일 18:10', '좋았던 점·아쉬운 점을 요약해요'], ['문의 분류', 'always', '상시', '배송·교환·상품 문의로 나눠요'], ['반품 사유 정리', 'idle', '매주 월', '반품 이유를 상품별로 모아요']] },
+  { n: '기획팀', sign: '★', shirt: '#e0a21b', pal: ['#fbefc9', '#f7e6b4', '#f8ebc4', '#f3e2b0', '#e2c271', '#f6e4b0'], msg: '11월 프로모션 준비 중',
+    m: [['프로모션 캘린더', 'idle', '매주 월', '진행 예정 행사를 정리해요'], ['기획전 성과', 'done', '행사 다음 날', '행사 기간 매출을 비교해요'], ['경쟁사 가격 조사', 'work', '매일 13:00', '비슷한 상품 가격을 모아요'], ['쿠폰 점검', 'done', '매일 09:30', '쿠폰 적용 금액을 확인해요'], ['신상 런칭 체크', 'idle', '요청 시', '런칭 준비물을 체크해요'], ['키워드 트렌드', 'always', '상시', '검색어 변화를 지켜봐요'], ['주간 리포트', 'idle', '매주 월 09:00', '한 주 매출·광고를 요약해요']] },
+  { n: '관리실', sign: '⚙', shirt: '#7b4fd6', pal: ['#e8e0f8', '#ddd3f3', '#e4dcf6', '#d9cff1', '#a991e0', '#ddd3f3'], msg: '연결 1곳 확인 필요',
+    m: [['데이터 품질 점검', 'done', '매일 09:20', '합계가 원본과 맞는지 확인해요'], ['대시보드 갱신', 'always', '상시', '웹 게시 데이터를 새로 받아요'], ['시트 백업', 'done', '매일 23:00', '주요 시트를 복사해 둬요'], ['광고 시트 연결', 'err', '매일 08:20', '광고 시트 연결이 끊겼어요 — 액세스 확인 필요']] },
+  { n: '인사팀', sign: 'HR', shirt: '#1f9e9a', pal: ['#d6f0ef', '#c7e9e8', '#d3eeed', '#c4e7e6', '#7cc6c3', '#c7e9e8'], msg: '새 직원 채용 대기',
+    m: [['채용 담당', 'idle', '—', '새 자동화가 생기면 여기에 자리를 만들어요']] }
+];
+const MR_HAIR = ['#3b2a20', '#1d1d1f', '#7a4a2a', '#c98a3a', '#55555f', '#8b3a2a'];
+const mrEsc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function mrPerson(st, shirt, hair, style) {
+  const R = (x, y, w, h, c, cls) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"${cls ? ` class="${cls}"` : ''}/>`;
+  const sc = { work: '#7cc4ff', idle: '#4a5a72', err: '#ff6b5e', always: '#9be3b0', done: '#7fd39a', vac: '#2c2c34', away: '#56607a' }[st];
+  let s = R(3, 25, 28, 1, 'rgba(0,0,0,.10)');
+  s += R(14, 17, 17, 2, '#c9925a') + R(14, 19, 17, 1, '#a87342') + R(29, 20, 2, 6, '#a87342') + R(15, 20, 1, 6, '#a87342');
+  s += R(20, 6, 10, 9, '#2c2c34') + R(21, 7, 8, 7, sc) + R(24, 15, 2, 2, '#2c2c34');
+  if (st === 'work') s += R(22, 8, 5, 1, '#fff', 'ln') + R(22, 10, 4, 1, '#fff', 'ln') + R(22, 12, 6, 1, '#fff', 'ln');
+  if (st === 'always') s += R(22, 11, 1, 2, '#2f7a4a') + R(24, 9, 1, 4, '#2f7a4a') + R(26, 10, 1, 3, '#2f7a4a');
+  if (st === 'done') s += R(22, 10, 1, 1, '#1d6b3a') + R(23, 11, 1, 1, '#1d6b3a') + R(24, 10, 1, 1, '#1d6b3a') + R(25, 9, 1, 1, '#1d6b3a') + R(26, 8, 1, 1, '#1d6b3a');
+  if (st === 'err') s += R(24, 8, 2, 3, '#fff') + R(24, 12, 2, 1, '#fff');
+  if (st !== 'err') s += R(3, 10, 2, 9, '#5a5a66') + R(3, 18, 9, 2, '#6b6b78') + R(7, 20, 1, 4, '#5a5a66') + R(4, 24, 7, 1, '#5a5a66');
+  if (st === 'vac') return s + R(16, 12, 5, 5, '#e8743b') + R(17, 11, 3, 1, '#a8501f') + R(16, 14, 5, 1, '#c25e26');
+  if (st === 'away') return s + R(16, 14, 2, 3, '#ffffff') + R(18, 15, 1, 1, '#ffffff') + `<g class="steam">${R(16, 11, 1, 2, '#c9c9cf')}${R(17, 9, 1, 2, '#c9c9cf')}</g>`;
+  if (st === 'err') {
+    return s + R(1, 22, 4, 3, '#3a3a4a') + R(5, 21, 8, 4, shirt) + R(13, 20, 5, 5, '#f2c9a0') + R(13, 20, 5, 1, hair) + R(14, 22, 1, 1, '#1d1d1f') + R(16, 22, 1, 1, '#1d1d1f') + R(3, 17, 7, 1, '#6b6b78') + R(3, 18, 1, 6, '#5a5a66');
+  }
+  s += R(8, 18, 6, 2, '#3a3a4a') + R(12, 20, 2, 4, '#3a3a4a') + R(12, 24, 3, 1, '#222');
+  s += R(6, 10, 6, 8, shirt);
+  s += R(6, 4, 6, 6, '#f2c9a0') + R(10, 6, 1, 1, '#1d1d1f') + R(11, 8, 1, 1, '#f29a9a');
+  if (style === 0) s += R(6, 3, 6, 2, hair) + R(6, 5, 1, 2, hair);
+  else if (style === 1) s += R(6, 3, 6, 2, hair) + R(5, 4, 2, 7, hair);
+  else s += R(6, 3, 7, 2, shirt) + R(12, 4, 2, 1, shirt) + R(6, 5, 1, 1, hair);
+  s += `<g${st === 'work' ? ' class="arm"' : ''}>${R(10, 12, 6, 2, shirt)}${R(16, 12, 1, 2, '#f2c9a0')}</g>` + R(15, 16, 5, 1, '#d0d0d8');
+  return s;
+}
+const MR_AVA = (() => {
+  const R = (x, y, w, h, c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
+  return `<svg viewBox="0 0 44 33" shape-rendering="crispEdges" aria-hidden="true">${R(4, 29, 36, 2, 'rgba(0,0,0,.08)')}${R(16, 3, 12, 2, '#8a5a3a')}${R(16, 5, 2, 4, '#8a5a3a')}${R(26, 5, 2, 4, '#8a5a3a')}${R(6, 9, 32, 20, '#e8743b')}${R(6, 9, 32, 2, '#f39a63')}${R(6, 27, 32, 2, '#c25e26')}${R(10, 9, 2, 20, '#c25e26')}${R(32, 9, 2, 20, '#c25e26')}${R(16, 15, 2, 3, '#2b2b2b')}${R(26, 15, 2, 3, '#2b2b2b')}${R(19, 20, 6, 1, '#2b2b2b')}${R(18, 19, 1, 1, '#2b2b2b')}${R(25, 19, 1, 1, '#2b2b2b')}${R(14, 19, 2, 1, '#ff9f9f')}${R(28, 19, 2, 1, '#ff9f9f')}${R(8, 30, 3, 2, '#3a3a3a')}${R(33, 30, 3, 2, '#3a3a3a')}</svg>`;
+})();
+const MR_PLANT = '<svg class="plant" viewBox="0 0 11 15" shape-rendering="crispEdges" aria-hidden="true"><rect x="5" y="1" width="1" height="8" fill="#2f9e4a"/><rect x="2" y="3" width="3" height="2" fill="#3fbf5a"/><rect x="6" y="2" width="3" height="2" fill="#3fbf5a"/><rect x="3" y="6" width="2" height="2" fill="#2f9e4a"/><rect x="6" y="5" width="3" height="2" fill="#2f9e4a"/><rect x="2" y="9" width="7" height="5" fill="#c56b3a"/><rect x="2" y="9" width="7" height="1" fill="#a8501f"/></svg>';
+let MR_TAB = 'room', MR_PICK = null;
+function mrGuest() { try { return JSON.parse(localStorage.getItem('bd-guestbook') || '[]'); } catch (e) { return []; } }
+function drawRoom() {
+  const host = $('roombox'); host.replaceChildren();
+  const all = MR_TEAMS.flatMap((t) => t.m.map((m) => ({ t, n: m[0], s: m[1], when: m[2], note: m[3] })));
+  const cnt = Object.fromEntries(MR_ORDER.map((k) => [k, all.filter((e) => e.s === k).length]));
+  const box = el('div', 'mr');
+  const top = el('div', 'mr-top');
+  const c = el('div', 'mr-count'); c.innerHTML = `TODAY <b>${cnt.done + cnt.work}</b> &nbsp;|&nbsp; TOTAL ${int(all.length * 213)}`;
+  const tabs = el('div', 'mr-tabs');
+  [['room', '미니룸'], ['guest', '방명록']].forEach(([k, l]) => { const b = el('button', null, l); b.type = 'button'; b.setAttribute('aria-pressed', String(MR_TAB === k)); b.onclick = () => { MR_TAB = k; drawRoom(); }; tabs.append(b); });
+  top.append(c, tabs);
+  const body = el('div', 'mr-body');
+  // 왼쪽 프로필
+  const side = el('div', 'mr-side');
+  const ava = el('div', 'mr-ava'); ava.innerHTML = MR_AVA;
+  const mood = el('div', 'mr-mood', '오늘의 기분'); const mb = el('b', cnt.err ? 'low' : null, cnt.err ? '살짝 지쳤어요' : '쌩쌩해요'); mood.append(mb);
+  const lg = el('div', 'mr-legend');
+  MR_ORDER.forEach((k) => { const s = el('span'); const q = el('i', 'mr-sq'); q.style.background = MR_STATUS[k].c; s.append(q, document.createTextNode(MR_STATUS[k].l), el('b', null, String(cnt[k]))); lg.append(s); });
+  const now = new Date(), hm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  const note = el('div', 'mr-note', '마지막 소식 ' + hm + ' · 지금은 예시 직원이에요. 나중에 시트나 예약 작업과 연결하면 상태가 자동으로 바뀌어요. 직원을 누르면 자세히 볼 수 있어요.');
+  side.append(ava, el('div', 'mr-name', '브랜든 오피스'), el('div', 'mr-desc', '자동화 직원 ' + all.length + '명이 일하는 작은 사무실'), el('hr', 'mr-hr'), mood, lg, el('hr', 'mr-hr'), note);
+  const pk = all.find((e) => e.t.n + '|' + e.n === MR_PICK);
+  if (pk) {
+    const p = el('div', 'mr-pick');
+    p.innerHTML = `<h4>${mrEsc(pk.n)}</h4><dl><dt>소속</dt><dd>${mrEsc(pk.t.n)}</dd><dt>상태</dt><dd><i class="mr-sq" style="background:${MR_STATUS[pk.s].c}"></i> ${MR_STATUS[pk.s].l}</dd><dt>일정</dt><dd>${mrEsc(pk.when)}</dd><dt>하는 일</dt><dd>${mrEsc(pk.note)}</dd></dl>`;
+    side.append(p);
+  }
+  // 오른쪽
+  const main = el('div', 'mr-main');
+  if (MR_TAB === 'guest') {
+    const gb = el('div', 'gb'); const f = el('form'); const inp = el('input'); inp.placeholder = '한마디 남기기'; inp.setAttribute('aria-label', '방명록 내용'); inp.maxLength = 200;
+    const sb = el('button', null, '남기기'); sb.type = 'submit'; f.append(inp, sb);
+    f.onsubmit = (e) => { e.preventDefault(); const v = inp.value.trim(); if (!v) return; const g = mrGuest(); g.unshift({ t: v, d: new Date().toLocaleString('ko-KR') }); try { localStorage.setItem('bd-guestbook', JSON.stringify(g.slice(0, 100))); } catch (er) {} drawRoom(); };
+    const ul = el('ul'); const g = mrGuest();
+    if (!g.length) ul.append(el('li', null, '아직 방명록이 비어 있어요. 이 브라우저에만 저장돼요.'));
+    g.forEach((x) => { const li = el('li', null, x.t); li.append(el('time', null, x.d)); ul.append(li); });
+    gb.append(f, ul); main.append(gb);
+  } else {
+    const hd = el('div', 'mr-head'); hd.innerHTML = `<b>미니룸</b>부서 ${MR_TEAMS.length}곳 · 일하는 중 ${cnt.work} · 상시 근무 ${cnt.always} · 대기 ${cnt.idle} · 오늘 완료 ${cnt.done}`;
+    const rooms = el('div', 'mr-rooms');
+    MR_TEAMS.forEach((t) => {
+      const r = el('section', 'room' + (t.m.length > 6 ? ' wide' : '')); r.setAttribute('aria-label', t.n);
+      const [w1, w2, f1, f2, bd, hdc] = t.pal; r.style.cssText = `--w1:${w1};--w2:${w2};--f1:${f1};--f2:${f2};--bd:${bd};--hd:${hdc}`;
+      const working = t.m.filter((m) => m[1] === 'work').length;
+      const h = el('div', 'room-h', t.n); h.append(el('span', null, t.m.length + '명' + (working ? ' · 일하는 중 ' + working : ''))); r.append(h);
+      const sc = el('div', 'scene');
+      sc.insertAdjacentHTML('beforeend', `<div class="sign" aria-hidden="true">${mrEsc(t.sign)}</div><div class="win" aria-hidden="true"><i></i><i></i><i></i><i></i></div>${MR_PLANT}`);
+      const bub = el('div', 'bub', t.msg); bub.title = t.msg; sc.append(bub);
+      const desks = el('div', 'desks');
+      t.m.forEach((m, i) => {
+        const [n, st] = m, key = t.n + '|' + n;
+        const b = el('button', 'emp'); b.type = 'button'; b.setAttribute('aria-pressed', String(MR_PICK === key)); b.setAttribute('aria-label', n + ' — ' + MR_STATUS[st].l);
+        b.innerHTML = `<svg viewBox="0 0 32 28" aria-hidden="true">${mrPerson(st, t.shirt, MR_HAIR[(i * 7 + t.n.length) % MR_HAIR.length], (i + t.n.length) % 3)}</svg>`;
+        if (st === 'idle') b.append(el('span', 'emo z', 'z z'));
+        if (st === 'done') b.append(el('span', 'emo ok', '✓'));
+        if (st === 'err') b.append(el('span', 'emo err', '!'));
+        const tg = el('span', 'tag'); const q = el('i', 'mr-sq'); q.style.background = MR_STATUS[st].c; tg.append(q, document.createTextNode(n)); b.append(tg);
+        b.onclick = () => { MR_PICK = MR_PICK === key ? null : key; drawRoom(); };
+        desks.append(b);
+      });
+      sc.append(desks); r.append(sc); rooms.append(r);
+    });
+    main.append(hd, rooms);
+  }
+  body.append(side, main); box.append(top, body); host.append(box);
+}
+
 /* ---------- 조건 패널 ---------- */
 function syncControls() {
   document.querySelectorAll('[data-grain]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.grain === S.grain)));
@@ -1062,7 +1261,9 @@ function syncControls() {
   ['from', 'to', 'cfrom', 'cto'].forEach((id) => { const e = $(id); e.min = D.first; e.max = D.last; if (document.activeElement !== e) e.value = S[id] || ''; });
   $('cmpdates').hidden = S.cmp !== 'custom';
   const isAd = S.view.startsWith('ads');
-  $('fg-cat').hidden = isAd; $('salesbanner').hidden = isAd;
+  const isRoom = S.view === 'room';
+  $('fg-cat').hidden = isAd; $('salesbanner').hidden = isAd || isRoom;
+  document.querySelector('.toolbar').hidden = isRoom; document.querySelector('.top .badge').hidden = isRoom; document.querySelector('.top .sub').hidden = isRoom;
   const cats = $('cats'); cats.replaceChildren();
   const all = el('button', 'chip', '전체'); all.type = 'button'; all.setAttribute('aria-pressed', String(!S.cats.size));
   all.onclick = () => { S.cats.clear(); S.drill = null; syncHash(); render(); }; cats.append(all);
@@ -1086,11 +1287,12 @@ function render() {
   const vk = S.view.startsWith('ads') ? 'ads' : S.view;
   document.querySelectorAll('.view').forEach((v) => { v.hidden = v.dataset.view !== vk; });
   document.querySelectorAll('.nav a').forEach((a) => { if (a.dataset.view === S.view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
-  $('title').textContent = { overview: '매출 현황', category: '카테고리', product: '상품 조회', promo: '프로모션', ads: '광고 종합', 'ads-sa': '검색광고', 'ads-gfa': 'GFA', 'ads-meta': 'Meta' }[S.view];
+  $('title').textContent = { overview: '매출 현황', category: '카테고리', product: '상품 조회', promo: '프로모션', ads: '광고 종합', 'ads-sa': '검색광고', 'ads-gfa': 'GFA', 'ads-meta': 'Meta', room: '미니룸' }[S.view];
   if (S.view === 'overview') drawOverview();
   else if (S.view === 'category') drawCategory();
   else if (S.view === 'product') drawProduct();
   else if (S.view === 'promo') drawPromo();
+  else if (S.view === 'room') drawRoom();
   else drawAds();
 }
 
@@ -1106,7 +1308,7 @@ function syncHash() {
 }
 function readHash() {
   const h = location.hash.slice(1); if (!h) return false;
-  const [v, qs] = h.split('?'); if (['overview', 'category', 'product', 'promo', 'ads', 'ads-sa', 'ads-gfa', 'ads-meta'].includes(v)) S.view = v;
+  const [v, qs] = h.split('?'); if (['overview', 'category', 'product', 'promo', 'ads', 'ads-sa', 'ads-gfa', 'ads-meta', 'room'].includes(v)) S.view = v;
   if (!qs) return false;
   const p = new URLSearchParams(qs), okd = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s || '');
   if (okd(p.get('from')) && okd(p.get('to'))) { S.from = p.get('from'); S.to = p.get('to'); }
