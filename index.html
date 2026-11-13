@@ -200,12 +200,19 @@ td.name .s { margin-top: 2px; }
 <div class="app loading" id="app">
   <nav class="side" aria-label="메뉴">
     <div class="brand"><i>B</i><span>브랜든</span></div>
-    <div class="navh">분석</div>
+    <div class="navh">매출</div>
     <div class="nav" id="nav">
       <a href="#overview" data-view="overview"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg><span>매출 현황</span></a>
       <a href="#category" data-view="category"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 13l4-5 3 3 5-7"/></svg><span>카테고리</span></a>
       <a href="#product" data-view="product"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><span>상품 조회</span></a>
       <a href="#promo" data-view="promo"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg><span>프로모션</span></a>
+    </div>
+    <div class="navh">광고</div>
+    <div class="nav" id="nav2">
+      <a href="#ads" data-view="ads"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.5 6.5v3h2l5 3v-9l-5 3h-2z"/><path d="M12 6c.8.6.8 3.4 0 4"/></svg><span>광고 종합</span></a>
+      <a href="#ads-sa" data-view="ads-sa"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="4" width="12" height="8" rx="4"/><circle cx="6" cy="8" r="1.5"/></svg><span>검색광고</span></a>
+      <a href="#ads-gfa" data-view="ads-gfa"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 10l3.5-3 3 2.5L11 7l3 3"/></svg><span>GFA</span></a>
+      <a href="#ads-meta" data-view="ads-meta"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 10.5c0-3 1.5-5 3-5 2.5 0 3.5 5 6 5 1.5 0 3-2 3-5"/></svg><span>Meta</span></a>
     </div>
     <button type="button" class="themebtn" id="themebtn" aria-pressed="true"><span class="sw"></span><span class="tl">다크 모드</span></button>
   </nav>
@@ -251,7 +258,11 @@ td.name .s { margin-top: 2px; }
           <button type="button" data-metric="순">순매출</button><button type="button" data-metric="총">총매출</button>
         </div>
       </div>
-      <div class="fg">
+      <div class="fg" id="fg-adch" hidden>
+        <div class="fl">광고 채널</div>
+        <div class="seg" role="group" aria-label="광고 채널"><button type="button" data-adch="스스">스마트스토어</button><button type="button" data-adch="자사몰">자사몰</button><button type="button" data-adch="전체">전체</button></div>
+      </div>
+      <div class="fg" id="fg-cat">
         <div class="fl">카테고리 <span id="catcount"></span></div>
         <div class="row" id="cats"></div>
       </div>
@@ -265,7 +276,7 @@ td.name .s { margin-top: 2px; }
       <span class="badge">데이터 기준 <span id="asof">—</span></span>
       <span class="sub">네이버 스마트스토어 · 네이버 RAW 기준</span>
     </div>
-    <div class="banner"><b>이 화면의 금액 기준</b> · 총매출 = 네이버 판매금액(총) · 순매출 = 총매출 − 환불금액 · 부가세 포함 · 데이터는 <span id="first">—</span>부터 있어요. 불러온 시각 <span id="fetched">—</span></div>
+    <div class="banner" id="salesbanner"><b>이 화면의 금액 기준</b> · 총매출 = 네이버 판매금액(총) · 순매출 = 총매출 − 환불금액 · 부가세 포함 · 데이터는 <span id="first">—</span>부터 있어요. 불러온 시각 <span id="fetched">—</span></div>
     <div class="status" id="status" hidden></div>
     <div id="drillbox"></div>
 
@@ -340,6 +351,31 @@ td.name .s { margin-top: 2px; }
         </div>
       </div>
     </section>
+    <!-- 광고 -->
+    <section class="view" data-view="ads" hidden>
+      <div style="display:flex;flex-direction:column;gap:24px">
+        <div class="status" id="adstatus" hidden></div>
+        <p class="banner" id="adnote"></p>
+        <div class="kpis" id="adkpis"></div>
+        <div class="card">
+          <div class="ch"><h2>기간별 광고비와 ROAS</h2><span class="hint">막대 = 광고비 · 선 = ROAS (오른쪽 축)</span></div>
+          <div class="legend" id="adlegend"></div>
+          <div class="chart" id="adbars"></div>
+        </div>
+        <div class="card" id="admedia-card">
+          <div class="ch"><h2>매체별 실적</h2><span class="hint">행 클릭 = 매체 상세</span></div>
+          <div class="scroll" id="admedia"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><h2 id="adtype-title">유형별 실적</h2></div>
+          <div class="scroll" id="adtype"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><h2>캠페인별 실적</h2><span class="hint">열 제목 클릭 = 정렬</span><span class="right"><input type="search" id="adq" placeholder="캠페인 검색" aria-label="캠페인 검색"></span></div>
+          <div class="scroll" id="adcamp"></div>
+        </div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -354,7 +390,7 @@ const PROMOS = [
 const PALETTE = ['#0071e3', '#34c759', '#ff9f0a', '#5ac8fa', '#ff375f', '#ffcc00', '#af52de', '#00c7be', '#ff3b30', '#5856d6', '#a2845e', '#30b0c7', '#64d2ff', '#bf5af2'];
 
 /* ---------- 상태 ---------- */
-const S = { view: 'overview', grain: '주', metric: '순', from: null, to: null, preset: '28', cmp: 'prev', cfrom: null, cto: null, cats: new Set(), drill: null, product: null, q: '', psort: 'v', psdir: -1, csort: 'v', csdir: -1, hidden: new Set(), promo: 0 };
+const S = { view: 'overview', grain: '주', metric: '순', from: null, to: null, preset: '28', cmp: 'prev', cfrom: null, cto: null, cats: new Set(), drill: null, product: null, q: '', psort: 'v', psdir: -1, csort: 'v', csdir: -1, hidden: new Set(), promo: 0, adch: '스스', asort: 'cost', asdir: -1, aq: '' };
 let D = null; // { rows, products, cats, first, last }
 
 /* ---------- 유틸 ---------- */
@@ -426,7 +462,14 @@ function parse(text) {
   out.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : 0));
   const tot = d3.rollup(out, (v) => d3.sum(v, (r) => r.g), (r) => r.c);
   const cats = Array.from(tot.keys()).sort((a, b) => (a === '미분류') - (b === '미분류') || tot.get(b) - tot.get(a));
-  return { rows: out, products, cats, first: out[0].d, last: out[out.length - 1].d };
+  const ai = H.indexOf('광고일자');
+  const ads = [];
+  if (ai >= 0) rows.slice(1).forEach((r) => {
+    const d = (r[ai] || '').trim(); if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+    ads.push({ d, md: (r[ai + 1] || '').trim(), ch: (r[ai + 2] || '').trim(), t: (r[ai + 3] || '').trim(), cp: (r[ai + 4] || '').trim(), cost: num(r[ai + 5]), imp: num(r[ai + 6]), clk: num(r[ai + 7]), conv: num(r[ai + 8]), rev: num(r[ai + 9]) });
+  });
+  ads.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : 0));
+  return { rows: out, products, cats, first: out[0].d, last: out[out.length - 1].d, ads, adFirst: ads.length ? ads[0].d : '', adLast: ads.length ? ads[ads.length - 1].d : '' };
 }
 
 /* ---------- 기간 ---------- */
@@ -793,6 +836,152 @@ function drawPromo() {
   th.append(tbl);
 }
 
+/* ---------- 광고 ---------- */
+const MEDIA = ['검색광고', 'GFA', 'Meta'];
+const MCOLOR = { 검색광고: '#34c759', GFA: '#0a84ff', Meta: '#bf5af2' };
+const AD0 = () => ({ cost: 0, imp: 0, clk: 0, conv: 0, rev: 0 });
+const adOk = (r, media) => (S.adch === '전체' || r.ch === S.adch) && (!media || r.md === media);
+function adAgg(rg, key, pred) {
+  const m = new Map(); if (!rg || !D.ads.length) return m;
+  for (const r of D.ads) { if (r.d < rg.a) continue; if (r.d > rg.b) break; if (!pred(r)) continue; const k = key(r); let t = m.get(k); if (!t) { t = AD0(); m.set(k, t); } t.cost += r.cost; t.imp += r.imp; t.clk += r.clk; t.conv += r.conv; t.rev += r.rev; }
+  return m;
+}
+const adTot = (rg, pred) => (rg ? adAgg(rg, () => 'all', pred).get('all') || AD0() : null);
+const roasOf = (t) => (t && t.cost ? t.rev / t.cost * 100 : null);
+const ctrOf = (t) => (t && t.imp ? t.clk / t.imp * 100 : null);
+const cpcOf = (t) => (t && t.clk ? t.cost / t.clk : null);
+const cvrOf = (t) => (t && t.clk ? t.conv / t.clk * 100 : null);
+const pctf = (v, d) => (v == null || !isFinite(v) ? '—' : d3.format(',.' + d + 'f')(v) + '%');
+const pp = (v) => (v == null || !isFinite(v) ? '—' : (v > 0 ? '▲' : v < 0 ? '▼' : '') + d3.format(',.1f')(Math.abs(v)) + '%p');
+const allSales = (rg) => { if (!rg) return null; const sv = S.cats; S.cats = new Set(); const t = sumRange(rg); S.cats = sv; return t; };
+function adRow(name, t, p, extra) {
+  return Object.assign({ name, cost: t.cost, imp: t.imp, clk: t.clk, conv: t.conv, rev: t.rev, roas: roasOf(t), ctr: ctrOf(t), cpc: cpcOf(t), cvr: cvrOf(t),
+    dcost: p ? ratio(t.cost, p.cost) : null, droas: p && roasOf(p) != null && roasOf(t) != null ? roasOf(t) - roasOf(p) : null }, extra || {});
+}
+const AC = {
+  name: { k: 'name', h: '이름', f: (td, r) => { td.className = 'name'; if (r.color) { const d = el('span', 'dot'); d.style.background = r.color; td.append(d); } td.append(document.createTextNode(r.name)); if (r.sub) td.append(el('span', 's', r.sub)); } },
+  cost: { k: 'cost', h: '광고비', f: (td, r) => { td.textContent = won(r.cost); } },
+  share: { k: 'share', h: '비중', f: (td, r) => { td.textContent = pctf(r.share, 1); } },
+  imp: { k: 'imp', h: '노출', f: (td, r) => { td.textContent = int(r.imp); } },
+  clk: { k: 'clk', h: '클릭', f: (td, r) => { td.textContent = int(r.clk); } },
+  ctr: { k: 'ctr', h: 'CTR', f: (td, r) => { td.textContent = pctf(r.ctr, 2); } },
+  cpc: { k: 'cpc', h: 'CPC', f: (td, r) => { td.textContent = r.cpc == null ? '—' : int(r.cpc); } },
+  conv: { k: 'conv', h: '전환수', f: (td, r) => { td.textContent = int(r.conv); } },
+  rev: { k: 'rev', h: '전환매출', f: (td, r) => { td.textContent = won(r.rev); } },
+  roas: { k: 'roas', h: 'ROAS', f: (td, r) => { td.textContent = pctf(r.roas, 0); } },
+  dcost: { k: 'dcost', h: '광고비 증감', f: (td, r) => { td.textContent = pct(r.dcost); } },
+  droas: { k: 'droas', h: 'ROAS 증감', f: (td, r) => { td.textContent = pp(r.droas); tone(td, r.droas); } }
+};
+function adTable(host, rows, cols, sortable, onRow) {
+  host.replaceChildren();
+  if (!rows.length) { host.append(el('div', 'empty', '이 기간에는 광고 데이터가 없어요')); return; }
+  const tbl = el('table'), hr = tbl.createTHead().insertRow();
+  cols.forEach((c) => {
+    const th = el('th');
+    if (sortable) { const b = el('button', null, c.h + (S.asort === c.k ? (S.asdir < 0 ? ' ▼' : ' ▲') : '')); if (S.asort === c.k) b.setAttribute('aria-sort', S.asdir < 0 ? 'descending' : 'ascending'); b.onclick = () => { if (S.asort === c.k) S.asdir *= -1; else { S.asort = c.k; S.asdir = -1; } drawAds(); }; th.append(b); }
+    else th.textContent = c.h;
+    hr.append(th);
+  });
+  const tb = tbl.createTBody();
+  rows.forEach((r) => {
+    const tr = tb.insertRow();
+    if (r.total) tr.className = 'total';
+    else if (onRow) { tr.className = 'click'; tr.tabIndex = 0; tr.onclick = () => onRow(r); tr.onkeydown = (e) => { if (e.key === 'Enter') onRow(r); }; }
+    cols.forEach((c) => c.f(tr.insertCell(), r));
+  });
+  host.append(tbl);
+}
+function drawAds() {
+  const media = { 'ads-sa': '검색광고', 'ads-gfa': 'GFA', 'ads-meta': 'Meta' }[S.view] || null;
+  const st = $('adstatus'), note = $('adnote');
+  ['adkpis', 'adbars', 'adlegend', 'admedia', 'adtype', 'adcamp'].forEach((id) => $(id).replaceChildren());
+  if (!D.ads.length) { st.hidden = false; st.textContent = "광고 데이터를 불러오지 못했어요. '네이버 매출(임시)' 시트 '대시보드_집계' 탭에서 광고 시트 연결(액세스 허용)을 확인해 주세요."; return; }
+  st.hidden = true;
+  note.textContent = '광고비·전환매출은 각 매체 리포트 기준이에요(검색광고 비용은 VAT 포함, GFA·Meta 전환은 구매 기준). 매체가 집계한 전환이라 실제 스토어 매출과 다를 수 있어요. 광고 데이터 ' + D.adFirst + ' ~ ' + D.adLast;
+  const rg = range(), cg = cmpRange(), pred = (r) => adOk(r, media);
+  const a = adTot(rg, pred), b = adTot(cg, pred);
+  const sales = S.adch === '스스' ? allSales(rg) : null, salesP = S.adch === '스스' ? allSales(cg) : null, f = F();
+  const share = sales && sales[f] ? a.cost / sales[f] * 100 : null, shareP = salesP && salesP[f] ? b.cost / salesP[f] * 100 : null;
+  // KPI
+  const k = $('adkpis');
+  const items = [
+    ['광고비', won(a.cost), int(a.cost) + '원', b ? ratio(a.cost, b.cost) : null, 0, 'r'],
+    ['전환매출', won(a.rev), '', b ? ratio(a.rev, b.rev) : null, 1, 'r'],
+    ['ROAS', pctf(roasOf(a), 0), '전환매출 ÷ 광고비', b && roasOf(b) != null && roasOf(a) != null ? roasOf(a) - roasOf(b) : null, 1, 'p'],
+    ['광고비 비중', share == null ? '—' : pctf(share, 1), S.adch === '스스' ? '광고비 ÷ 스토어 ' + mname() : '스마트스토어 채널에서만 계산', share != null && shareP != null ? share - shareP : null, -1, 'p'],
+    ['클릭', int(a.clk), 'CTR ' + pctf(ctrOf(a), 2), b ? ratio(a.clk, b.clk) : null, 1, 'r'],
+    ['CPC', cpcOf(a) == null ? '—' : int(cpcOf(a)) + '원', '광고비 ÷ 클릭', b ? ratio(cpcOf(a), cpcOf(b)) : null, -1, 'r'],
+    ['전환수', int(a.conv), '전환율 ' + pctf(cvrOf(a), 2), b ? ratio(a.conv, b.conv) : null, 1, 'r']
+  ];
+  items.forEach(([l, v, sub, c, dir, kind]) => {
+    const card = el('div', 'kpi'); card.append(el('div', 'l', l), el('div', 'v', v));
+    const ft = el('div', 'f');
+    if (b) { const e = el('b', null, kind === 'p' ? pp(c) : pct(c)); if (dir) tone(e, c == null ? null : c * dir); ft.append(e, document.createTextNode(' 비교 대비')); if (sub) ft.append(document.createTextNode(' · ' + sub)); }
+    else ft.textContent = sub || ' ';
+    card.append(ft); k.append(card);
+  });
+  // 차트
+  const meds = media ? [media] : MEDIA;
+  const lg = $('adlegend');
+  meds.forEach((md) => { const s = el('span'); s.style.display = 'inline-flex'; s.style.alignItems = 'center'; s.style.gap = '6px'; const i = el('i'); i.style.background = MCOLOR[md]; s.append(i, document.createTextNode(md + ' 광고비')); lg.append(s); });
+  const ls = el('span'); ls.style.display = 'inline-flex'; ls.style.alignItems = 'center'; ls.style.gap = '6px'; const li = el('i'); li.style.background = 'var(--fg)'; ls.append(li, document.createTextNode('ROAS')); lg.append(ls);
+  const host = $('adbars');
+  const bm = adAgg(rg, (r) => bucket(r.d) + '|' + r.md, pred), tm = adAgg(rg, (r) => bucket(r.d), pred);
+  const keys = []; for (let d = rg.a; d <= (rg.b > D.last ? D.last : rg.b); d = add(d, 1)) { const kk = bucket(d); if (keys[keys.length - 1] !== kk) keys.push(kk); }
+  const data = keys.map((kk) => { let acc = 0; const parts = meds.map((md) => { const v = (bm.get(kk + '|' + md) || AD0()).cost; const p = { md, y0: acc, y1: acc + v, v }; acc += v; return p; }); return { k: kk, parts, t: tm.get(kk) || AD0() }; });
+  if (data.length) {
+    const W = Math.max(300, host.clientWidth), H = 280, mb = 26, mr = 52;
+    const svg = d3.select(host).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', S.grain + '별 광고비 누적 막대와 ROAS 선 그래프');
+    const y = d3.scaleLinear().domain([0, d3.max(data, (d) => d.t.cost) || 1]).nice().range([H - mb, 16]);
+    const y2 = d3.scaleLinear().domain([0, d3.max(data, (d) => roasOf(d.t) || 0) || 100]).nice().range([H - mb, 16]);
+    const gy = svg.append('g'); gy.call(d3.axisLeft(y).ticks(4).tickSize(0).tickFormat(shortAxis));
+    let ml = 0; gy.selectAll('text').each(function () { ml = Math.max(ml, this.getComputedTextLength()); }); ml = Math.ceil(ml) + 10;
+    gy.attr('transform', `translate(${ml},0)`).call(d3.axisLeft(y).ticks(4).tickSize(-(W - ml - mr)).tickFormat(shortAxis));
+    gy.select('.domain').remove(); gy.selectAll('.tick text').attr('dx', -6);
+    const gy2 = svg.append('g').attr('transform', `translate(${W - mr},0)`).call(d3.axisRight(y2).ticks(4).tickSize(0).tickFormat((v) => d3.format(',.0f')(v) + '%'));
+    gy2.select('.domain').remove(); gy2.selectAll('.tick text').attr('dx', 8);
+    const x = d3.scaleBand().domain(keys).range([ml, W - mr]).padding(keys.length > 40 ? 0.15 : 0.3);
+    const every = Math.max(1, Math.ceil(keys.length / Math.max(2, Math.floor((W - ml - mr) / 58))));
+    const gx = svg.append('g').attr('transform', `translate(0,${H - mb})`).call(d3.axisBottom(x).tickValues(keys.filter((_, i) => i % every === 0)).tickSize(0).tickFormat(bucketLabel));
+    gx.select('.domain').remove(); gx.selectAll('.tick text').attr('dy', 10);
+    data.forEach((d) => d.parts.forEach((p) => { if (p.v > 0) svg.append('rect').attr('x', x(d.k)).attr('width', x.bandwidth()).attr('y', y(p.y1)).attr('height', Math.max(0, y(p.y0) - y(p.y1))).style('fill', MCOLOR[p.md]).style('opacity', 0.85); }));
+    const pts = data.filter((d) => roasOf(d.t) != null).map((d) => ({ x: x(d.k) + x.bandwidth() / 2, v: roasOf(d.t) }));
+    svg.append('path').datum(pts).attr('d', d3.line().x((p) => p.x).y((p) => y2(p.v))).style('fill', 'none').style('stroke', 'var(--fg)').style('stroke-width', 1.8);
+    if (pts.length <= 40) svg.append('g').selectAll('circle').data(pts).join('circle').attr('cx', (p) => p.x).attr('cy', (p) => y2(p.v)).attr('r', 3).style('fill', 'var(--panel)').style('stroke', 'var(--fg)').style('stroke-width', 1.5);
+    const t = tipOf(host);
+    svg.append('g').selectAll('rect').data(data).join('rect').attr('x', (d) => x(d.k) - (x.step() - x.bandwidth()) / 2).attr('width', x.step()).attr('y', 0).attr('height', H - mb).style('fill', 'transparent')
+      .on('pointerenter', (ev, d) => {
+        const s = host.clientWidth / W, lines = [[null, bucketTitle(d.k)]].concat(d.parts.slice().reverse().map((p) => [p.md, int(p.v) + '원', MCOLOR[p.md]]));
+        lines.push(['광고비 합계', int(d.t.cost) + '원'], ['전환매출', int(d.t.rev) + '원'], ['ROAS', pctf(roasOf(d.t), 0)]);
+        t.show(lines, (x(d.k) + x.bandwidth() / 2) * s, y(d.t.cost) * s);
+      })
+      .on('pointerleave', () => t.hide());
+  }
+  // 매체별
+  $('admedia-card').hidden = !!media;
+  if (!media) {
+    const cur = adAgg(rg, (r) => r.md, pred), prev = adAgg(cg, (r) => r.md, pred);
+    const rows = MEDIA.filter((md) => cur.has(md) || prev.has(md)).map((md) => adRow(md, cur.get(md) || AD0(), prev.get(md), { color: MCOLOR[md], share: a.cost ? (cur.get(md) || AD0()).cost / a.cost * 100 : null, md }));
+    rows.unshift(adRow('합계', a, b, { total: true, share: 100 }));
+    adTable($('admedia'), rows, [Object.assign({}, AC.name, { h: '매체' }), AC.cost, AC.share, AC.imp, AC.clk, AC.ctr, AC.cpc, AC.conv, AC.rev, AC.roas, AC.dcost, AC.droas], false,
+      (r) => { S.view = { 검색광고: 'ads-sa', GFA: 'ads-gfa', Meta: 'ads-meta' }[r.md]; syncHash(); render(); window.scrollTo(0, 0); });
+  }
+  // 유형별
+  $('adtype-title').textContent = media ? (media === '검색광고' ? '캠페인 유형별 실적' : media === 'GFA' ? '캠페인 목적별 실적' : '타겟별 실적') : '매체·유형별 실적';
+  const tc = adAgg(rg, (r) => r.md + '|' + (r.t || '기타'), pred), tp = adAgg(cg, (r) => r.md + '|' + (r.t || '기타'), pred);
+  const trows = Array.from(tc, ([kk, v]) => { const [md, ty] = kk.split('|'); return adRow(ty, v, tp.get(kk), { sub: media ? '' : md, color: MCOLOR[md], share: a.cost ? v.cost / a.cost * 100 : null }); }).sort((p, q) => q.cost - p.cost);
+  adTable($('adtype'), trows, [Object.assign({}, AC.name, { h: '유형' }), AC.cost, AC.share, AC.clk, AC.ctr, AC.cpc, AC.conv, AC.rev, AC.roas, AC.droas], false);
+  // 캠페인별
+  const cc = adAgg(rg, (r) => r.md + '|' + r.cp, pred), cpv = adAgg(cg, (r) => r.md + '|' + r.cp, pred), meta = new Map();
+  for (const r of D.ads) meta.set(r.md + '|' + r.cp, r);
+  const q = S.aq.trim().toLowerCase();
+  let crows = Array.from(cc, ([kk, v]) => { const r0 = meta.get(kk) || {}; return adRow(r0.cp || kk, v, cpv.get(kk), { sub: [media ? '' : r0.md, r0.t, r0.ch].filter(Boolean).join(' · '), color: MCOLOR[r0.md] }); });
+  if (q) crows = crows.filter((r) => (r.name + ' ' + r.sub).toLowerCase().includes(q));
+  const sk = S.asort, sd = S.asdir;
+  crows.sort((p, q2) => (sk === 'name' ? p.name.localeCompare(q2.name, 'ko') * -sd : ((p[sk] ?? -Infinity) - (q2[sk] ?? -Infinity)) * sd));
+  adTable($('adcamp'), crows.slice(0, 150), [Object.assign({}, AC.name, { h: '캠페인' }), AC.cost, AC.imp, AC.clk, AC.ctr, AC.cpc, AC.conv, AC.rev, AC.roas, AC.dcost, AC.droas], true);
+}
+
 /* ---------- 조건 패널 ---------- */
 function syncControls() {
   document.querySelectorAll('[data-grain]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.grain === S.grain)));
@@ -802,6 +991,9 @@ function syncControls() {
   $('month').value = /^\d{4}-\d{2}$/.test(S.preset) ? S.preset : '';
   ['from', 'to', 'cfrom', 'cto'].forEach((id) => { const e = $(id); e.min = D.first; e.max = D.last; if (document.activeElement !== e) e.value = S[id] || ''; });
   $('cmpdates').hidden = S.cmp !== 'custom';
+  const isAd = S.view.startsWith('ads');
+  $('fg-cat').hidden = isAd; $('fg-adch').hidden = !isAd; $('salesbanner').hidden = isAd;
+  document.querySelectorAll('[data-adch]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.adch === S.adch)));
   const cats = $('cats'); cats.replaceChildren();
   const all = el('button', 'chip', '전체'); all.type = 'button'; all.setAttribute('aria-pressed', String(!S.cats.size));
   all.onclick = () => { S.cats.clear(); S.drill = null; syncHash(); render(); }; cats.append(all);
@@ -820,13 +1012,15 @@ function syncControls() {
 function render() {
   if (!D) return;
   syncControls();
-  document.querySelectorAll('.view').forEach((v) => { v.hidden = v.dataset.view !== S.view; });
-  document.querySelectorAll('#nav a').forEach((a) => { if (a.dataset.view === S.view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
-  $('title').textContent = { overview: '매출 현황', category: '카테고리', product: '상품 조회', promo: '프로모션' }[S.view];
+  const vk = S.view.startsWith('ads') ? 'ads' : S.view;
+  document.querySelectorAll('.view').forEach((v) => { v.hidden = v.dataset.view !== vk; });
+  document.querySelectorAll('.nav a').forEach((a) => { if (a.dataset.view === S.view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  $('title').textContent = { overview: '매출 현황', category: '카테고리', product: '상품 조회', promo: '프로모션', ads: '광고 종합', 'ads-sa': '검색광고', 'ads-gfa': 'GFA', 'ads-meta': 'Meta' }[S.view];
   if (S.view === 'overview') drawOverview();
   else if (S.view === 'category') drawCategory();
   else if (S.view === 'product') drawProduct();
-  else drawPromo();
+  else if (S.view === 'promo') drawPromo();
+  else drawAds();
 }
 
 /* ---------- 주소(#)에 조건 저장 ---------- */
@@ -837,11 +1031,12 @@ function syncHash() {
   if (S.cats.size) p.set('cat', Array.from(S.cats).join('|'));
   if (S.product) p.set('p', S.product);
   if (S.preset) p.set('pre', S.preset);
+  if (S.adch !== '스스') p.set('ach', S.adch);
   history.replaceState(null, '', '#' + S.view + '?' + p.toString());
 }
 function readHash() {
   const h = location.hash.slice(1); if (!h) return false;
-  const [v, qs] = h.split('?'); if (['overview', 'category', 'product', 'promo'].includes(v)) S.view = v;
+  const [v, qs] = h.split('?'); if (['overview', 'category', 'product', 'promo', 'ads', 'ads-sa', 'ads-gfa', 'ads-meta'].includes(v)) S.view = v;
   if (!qs) return false;
   const p = new URLSearchParams(qs), okd = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s || '');
   if (okd(p.get('from')) && okd(p.get('to'))) { S.from = p.get('from'); S.to = p.get('to'); }
@@ -852,6 +1047,7 @@ function readHash() {
   if (p.get('cat')) S.cats = new Set(p.get('cat').split('|').filter((c) => D.cats.includes(c)));
   if (p.get('p')) S.product = p.get('p');
   S.preset = p.get('pre') || '';
+  if (['스스', '자사몰', '전체'].includes(p.get('ach'))) S.adch = p.get('ach');
   return okd(p.get('from'));
 }
 
@@ -878,7 +1074,9 @@ const dateOk = (e) => e.value && e.validity.valid;
   S[id] = e.target.value; if (S.cfrom && S.cto && S.cfrom > S.cto) { if (id === 'cfrom') S.cto = S.cfrom; else S.cfrom = S.cto; }
   syncHash(); render();
 }));
-document.querySelectorAll('#nav a').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); S.view = a.dataset.view; S.drill = null; syncHash(); render(); window.scrollTo(0, 0); }));
+document.querySelectorAll('[data-adch]').forEach((b) => b.addEventListener('click', () => { S.adch = b.dataset.adch; syncHash(); render(); }));
+let aqt; $('adq').addEventListener('input', (e) => { clearTimeout(aqt); aqt = setTimeout(() => { S.aq = e.target.value; drawAds(); }, 150); });
+document.querySelectorAll('.nav a').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); S.view = a.dataset.view; S.drill = null; syncHash(); render(); window.scrollTo(0, 0); }));
 let qt; $('q').addEventListener('input', (e) => { clearTimeout(qt); qt = setTimeout(() => { S.q = e.target.value; drawProduct(); }, 150); });
 $('pclose').addEventListener('click', () => { S.product = null; syncHash(); drawProduct(); });
 $('promosel').addEventListener('change', (e) => { S.promo = +e.target.value; drawPromo(); });
